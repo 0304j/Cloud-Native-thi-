@@ -1,0 +1,15 @@
+cat > .gitignore <<'EOF'
+# Go
+bin/
+*.exe
+*.log
+*.tmp
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Docker build temp
+tmp/
+EOF

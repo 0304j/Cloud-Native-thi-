@@ -1,0 +1,8 @@
+[mongo]
+uri = "mongodb://root:example@mongo:27017"
+database = "auth_db"
+collection = "users"
+
+[jwt]
+secret = "supergeheimespasswort"
+expires_in = 3600
