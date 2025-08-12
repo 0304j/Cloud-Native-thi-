@@ -1,18 +1,18 @@
-# Vorher (veraltet)
-# FROM golang:1.21
-# oder
-# FROM golang:1.22
-
-# ✅ Neuer, funktionierender Base Image
-FROM golang:1.24.5
+FROM golang:1.24.5-alpine AS builder
 
 WORKDIR /app
 
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-RUN go mod tidy
+RUN CGO_ENABLED=0 GOOS=linux go build -o checkout-service ./cmd
 
-RUN go build -o main ./cmd
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
 
-CMD ["./main"]
+COPY --from=builder /app/checkout-service .
 
+CMD ["./checkout-service"]

@@ -1,21 +1,20 @@
-FROM golang:1.24.5-alpine
+FROM golang:1.24.5-alpine AS builder
 
-# benötigte Tools installieren
-RUN apk add --no-cache git curl
-
-# Arbeitsverzeichnis setzen
 WORKDIR /app
 
-# Quellcode ins Image kopieren
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
+RUN CGO_ENABLED=0 GOOS=linux go build -o shopping-service ./cmd
 
-# Air installieren
-RUN go install github.com/air-verse/air@v1.62.0
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
 
-# Starte Air zum Hot Reload
-CMD ["air"]
+COPY --from=builder /app/shopping-service .
 
+EXPOSE 8080
 
-
-
+CMD ["./shopping-service"]

@@ -2,10 +2,15 @@ name: CI Pipeline (Build | Test | Build Images -> GHCR)
 
 on:
   push:
-    branches: [ main, Arnold-Branch ]  # Beide Branches
+    branches: [ main, Arnold-Branch ]
   pull_request:
-    branches: [ main, Arnold-Branch ]  # Beide Branches
+    branches: [ main, Arnold-Branch ]
   workflow_dispatch:
+
+# ✅ DAS FEHLT: Permissions hinzufügen!
+permissions:
+  contents: read
+  packages: write
 
 env:
   GO_VERSION: 1.24.5
@@ -16,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [shopping-service, checkout-service, auth-service]
+        service: [shopping-service, auth-service, checkout-service]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,7 +39,8 @@ jobs:
       - name: Build
         run: |
           cd ${{ matrix.service }}
-          go build ./...
+          mkdir -p build
+          go build -o build/main ./cmd
 
       - name: Run unit tests
         run: |
@@ -47,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [shopping-service, checkout-service, auth-service]
+        service: [shopping-service, auth-service, checkout-service]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -67,7 +73,4 @@ jobs:
         with:
           context: ./${{ matrix.service }}
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}
-YAML
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
