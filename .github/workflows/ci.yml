@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [shopping-service, checkout-service, auth-service]
+        service: [shopping-service, auth-service, checkout-service]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,7 +34,8 @@ jobs:
       - name: Build
         run: |
           cd ${{ matrix.service }}
-          go build ./...
+          mkdir -p build
+          go build -o build/main ./cmd  # ← KORRIGIERT: Eindeutiger Output-Name!
 
       - name: Run unit tests
         run: |
@@ -47,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [shopping-service, checkout-service, auth-service]
+        service: [shopping-service, auth-service, checkout-service]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
