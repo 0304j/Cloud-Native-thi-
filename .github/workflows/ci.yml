@@ -2,9 +2,9 @@ name: CI Pipeline (Build | Test | Build Images -> GHCR)
 
 on:
   push:
-    branches: [ main, Arnold-Branch ]  # Beide Branches
+    branches: [ main, Arnold-Branch ]
   pull_request:
-    branches: [ main, Arnold-Branch ]  # Beide Branches
+    branches: [ main, Arnold-Branch ]
   workflow_dispatch:
 
 env:
@@ -67,7 +67,4 @@ jobs:
         with:
           context: ./${{ matrix.service }}
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}
-YAML
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
