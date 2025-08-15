@@ -10,6 +10,9 @@ bin/
 .idea/
 .DS_Store
 
+# Bruno is a local tool for API Testing
+.bruno/
+
 # Docker build temp
 tmp/
 EOF
