@@ -1,20 +1,35 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
+	"payment-service/internal/adapters/http"
+	"payment-service/internal/adapters/postgres"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 func main() {
-	r := mux.NewRouter()
-	// TODO: Register payment handlers
+
+	r := gin.Default()
+
+	conn, err := pgx.Connect(context.Background(), "postgres://root:rootpass@postgres:5432/payments")
+	if err != nil {
+		log.Fatal("DB connection failed:", err)
+	}
+	defer conn.Close(context.Background())
+
+	repo := &postgres.PaymentRepository{Conn: conn}
+	handler := &http.PaymentHandler{Repo: repo}
+
+	r.GET("/payments", handler.GetAllPayments)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8083"
 	}
-	log.Printf("Payment service running on port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	r.Run(":" + port)
 }

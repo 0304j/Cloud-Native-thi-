@@ -1,5 +1,7 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS payments (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     provider VARCHAR(32) NOT NULL,
     amount NUMERIC(10,2) NOT NULL,
     currency VARCHAR(8) NOT NULL,
