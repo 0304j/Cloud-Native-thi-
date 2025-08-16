@@ -13,6 +13,18 @@ services:
        MONGO_INITDB_ROOT_PASSWORD: rootpass
      command: ["--auth"]
 
+  postgres:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
+    environment:
+      POSTGRES_DB: payments
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpass
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
     environment:
@@ -46,6 +58,19 @@ services:
     depends_on:
       - kafka
 
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: paymentdb
+      DB_USER: paymentuser
+      DB_PASSWORD: paymentpass
+
   auth-service:
     build: ./auth-service
     ports:
@@ -61,6 +86,8 @@ services:
     
     restart: unless-stopped
 
+
 volumes:
   mongo_data:
+  postgres_data:
 
