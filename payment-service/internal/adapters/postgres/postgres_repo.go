@@ -7,11 +7,11 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type PaymentRepository struct {
+type PaymentRepositoryConnection struct {
 	Conn *pgx.Conn
 }
 
-func (r *PaymentRepository) GetPaymentByID(ctx context.Context, id string) (*domain.Payment, error) {
+func (r *PaymentRepositoryConnection) GetPayment(ctx context.Context, id string) (domain.Payment, error) {
 	var p domain.Payment
 	err := r.Conn.QueryRow(ctx, `
         SELECT id, provider, amount, currency, status, created_at, updated_at
@@ -20,12 +20,12 @@ func (r *PaymentRepository) GetPaymentByID(ctx context.Context, id string) (*dom
 		&p.ID, &p.Provider, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
-		return nil, err
+		return domain.Payment{}, err
 	}
-	return &p, nil
+	return p, nil
 }
 
-func (r *PaymentRepository) GetPayments(ctx context.Context) ([]domain.Payment, error) {
+func (r *PaymentRepositoryConnection) GetAllPayments(ctx context.Context) ([]domain.Payment, error) {
 	rows, err := r.Conn.Query(ctx, `
 		SELECT id, provider, amount, currency, status, created_at, updated_at
 		FROM payments
@@ -44,4 +44,12 @@ func (r *PaymentRepository) GetPayments(ctx context.Context) ([]domain.Payment, 
 		payments = append(payments, p)
 	}
 	return payments, nil
+}
+
+func (s *PaymentRepositoryConnection) CreatePayment(ctx context.Context, payment domain.Payment) error {
+	_, err := s.Conn.Exec(ctx, `
+        INSERT INTO payments (provider, amount, currency, status)
+        VALUES ($1, $2, $3, $4)
+    `, payment.Provider, payment.Amount, payment.Currency, payment.Status)
+	return err
 }
