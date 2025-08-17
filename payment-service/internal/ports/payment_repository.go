@@ -2,17 +2,13 @@ package ports
 
 import (
 	"context"
-	"payment-service/internal/domain"
+	"payment-service/internal/domain/models"
+
+	"github.com/google/uuid"
 )
 
 type PaymentRepository interface {
-	GetPayment(ctx context.Context, id string) (domain.Payment, error)
-	GetAllPayments(ctx context.Context) ([]domain.Payment, error)
-	CreatePayment(ctx context.Context, payment domain.Payment) error
-}
-
-type PaymentService interface {
-	GetPayment(ctx context.Context, id string) (domain.Payment, error)
-	GetAllPayments(ctx context.Context) ([]domain.Payment, error)
-	CreatePayment(ctx context.Context, payment domain.Payment) error
+	Save(ctx context.Context, p *models.Payment) error
+	FindByID(ctx context.Context, id uuid.UUID) (*models.Payment, error)
+	FindAll(ctx context.Context) ([]models.Payment, error)
 }

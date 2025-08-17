@@ -2,22 +2,47 @@ package service
 
 import (
 	"context"
-	"payment-service/internal/domain"
+	"fmt"
+	"payment-service/internal/domain/models"
 	"payment-service/internal/ports"
+	"time"
+
+	"github.com/google/uuid"
 )
 
-type PaymentService struct {
-	Repo ports.PaymentRepository
+type Service struct {
+	repo ports.PaymentRepository
 }
 
-func (s *PaymentService) GetPayment(ctx context.Context, id string) (domain.Payment, error) {
-	return s.Repo.GetPayment(ctx, id)
+func NewService(r ports.PaymentRepository) *Service {
+	return &Service{repo: r}
 }
 
-func (s *PaymentService) GetAllPayments(ctx context.Context) ([]domain.Payment, error) {
-	return s.Repo.GetAllPayments(ctx)
+func (s *Service) CreatePayment(ctx context.Context, p models.Payment) (*models.Payment, error) {
+	if p.Amount <= 0 {
+		return nil, fmt.Errorf("amount must be positive")
+	}
+	if p.ID == uuid.Nil {
+		p.ID = uuid.New()
+	}
+	p.Status = models.StatusPending
+
+	now := time.Now()
+	if p.CreatedAt.IsZero() {
+		p.CreatedAt = now
+	}
+	p.UpdatedAt = now
+
+	if err := s.repo.Save(ctx, &p); err != nil {
+		return nil, err
+	}
+	return &p, nil
 }
 
-func (s *PaymentService) CreatePayment(ctx context.Context, payment domain.Payment) error {
-	return s.Repo.CreatePayment(ctx, payment)
+func (s *Service) GetPayment(ctx context.Context, id uuid.UUID) (*models.Payment, error) {
+	return s.repo.FindByID(ctx, id)
+}
+
+func (s *Service) GetAllPayments(ctx context.Context) ([]models.Payment, error) {
+	return s.repo.FindAll(ctx)
 }

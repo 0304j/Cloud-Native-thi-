@@ -2,54 +2,54 @@ package postgres
 
 import (
 	"context"
-	"payment-service/internal/domain"
+	"errors"
+	"payment-service/internal/domain/models"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+
+	"payment-service/internal/ports"
 )
 
-type PaymentRepositoryConnection struct {
-	Conn *pgx.Conn
+type PaymentRepository struct {
+	db *gorm.DB
 }
 
-func (r *PaymentRepositoryConnection) GetPayment(ctx context.Context, id string) (domain.Payment, error) {
-	var p domain.Payment
-	err := r.Conn.QueryRow(ctx, `
-        SELECT id, provider, amount, currency, status, created_at, updated_at
-        FROM payments WHERE id = $1
-    `, id).Scan(
-		&p.ID, &p.Provider, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt,
-	)
-	if err != nil {
-		return domain.Payment{}, err
+func NewPaymentRepository(db *gorm.DB) ports.PaymentRepository {
+	return &PaymentRepository{db: db}
+}
+
+func (r *PaymentRepository) Save(ctx context.Context, payment *models.Payment) error {
+	entity := FromDomain(payment)
+	if err := r.db.WithContext(ctx).Save(entity).Error; err != nil {
+		return err
 	}
-	return p, nil
+
+	domainModel := entity.ToDomain()
+	*payment = *domainModel
+	return nil
 }
 
-func (r *PaymentRepositoryConnection) GetAllPayments(ctx context.Context) ([]domain.Payment, error) {
-	rows, err := r.Conn.Query(ctx, `
-		SELECT id, provider, amount, currency, status, created_at, updated_at
-		FROM payments
-	`)
-	if err != nil {
+func (r *PaymentRepository) FindByID(ctx context.Context, id uuid.UUID) (*models.Payment, error) {
+	var entity PaymentEntity
+	if err := r.db.WithContext(ctx).First(&entity, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("payment not found")
+		}
 		return nil, err
 	}
-	defer rows.Close()
-
-	var payments []domain.Payment
-	for rows.Next() {
-		var p domain.Payment
-		if err := rows.Scan(&p.ID, &p.Provider, &p.Amount, &p.Currency, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
-			return nil, err
-		}
-		payments = append(payments, p)
-	}
-	return payments, nil
+	return entity.ToDomain(), nil
 }
 
-func (s *PaymentRepositoryConnection) CreatePayment(ctx context.Context, payment domain.Payment) error {
-	_, err := s.Conn.Exec(ctx, `
-        INSERT INTO payments (provider, amount, currency, status)
-        VALUES ($1, $2, $3, $4)
-    `, payment.Provider, payment.Amount, payment.Currency, payment.Status)
-	return err
+func (r *PaymentRepository) FindAll(ctx context.Context) ([]models.Payment, error) {
+	var entities []PaymentEntity
+	if err := r.db.WithContext(ctx).Find(&entities).Error; err != nil {
+		return nil, err
+	}
+	result := make([]models.Payment, len(entities))
+	for index, entity := range entities {
+		domainModel := entity.ToDomain()
+		result[index] = *domainModel
+	}
+	return result, nil
 }
