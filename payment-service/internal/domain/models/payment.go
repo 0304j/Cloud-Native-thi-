@@ -16,15 +16,15 @@ const (
 )
 
 type Payment struct {
-	ID        uuid.UUID
-	OrderID   uuid.UUID
-	UserID    uuid.UUID
-	Provider  string
-	Amount    float64
-	Currency  string
-	Status    Status
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	OrderID   uuid.UUID `json:"order_id" binding:"required"`
+	UserID    uuid.UUID `json:"user_id" binding:"required"`
+	Provider  string    `json:"provider" binding:"required,min=1,max=32"`
+	Amount    float64   `json:"amount" binding:"required,gt=0"`
+	Currency  string    `json:"currency" binding:"required,len=3"`
+	Status    Status    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func NewPayment(orderID, userID uuid.UUID, provider string, amount float64, currency string) (*Payment, error) {

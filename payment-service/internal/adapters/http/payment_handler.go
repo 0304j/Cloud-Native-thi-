@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"payment-service/internal/domain/models"
 	"payment-service/internal/ports"
@@ -26,7 +25,6 @@ func (h *PaymentHandler) GetAllPayments(c *gin.Context) {
 
 func (h *PaymentHandler) GetPayment(c *gin.Context) {
 	idStr := c.Param("id")
-	fmt.Println("Fetching payment with ID:", idStr)
 
 	uid, err := uuid.Parse(idStr)
 	if err != nil {
@@ -36,7 +34,10 @@ func (h *PaymentHandler) GetPayment(c *gin.Context) {
 
 	payment, err := h.Service.GetPayment(context.Background(), uid)
 	if err != nil {
-		// Optional: 404 sauber unterscheiden, falls dein Service/Repo ErrNotFound zurückgibt
+		if err.Error() == "payment not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "payment not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -55,6 +56,68 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// Das vom Service/Repo aktualisierte Objekt (inkl. ID/Timestamps) zurückgeben
 	c.JSON(http.StatusCreated, created)
+}
+
+func (h *PaymentHandler) UpdatePaymentStatus(c *gin.Context) {
+	idStr := c.Param("id")
+	uid, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid UUID"})
+		return
+	}
+
+	var request struct {
+		Status models.Status `json:"status" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	payment, err := h.Service.UpdatePaymentStatus(context.Background(), uid, request.Status)
+	if err != nil {
+		if err.Error() == "payment not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "payment not found"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, payment)
+}
+
+func (h *PaymentHandler) DeletePayment(c *gin.Context) {
+	idStr := c.Param("id")
+	uid, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid UUID"})
+		return
+	}
+
+	if err := h.Service.DeletePayment(context.Background(), uid); err != nil {
+		if err.Error() == "payment not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "payment not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
+func (h *PaymentHandler) GetPaymentsByStatus(c *gin.Context) {
+	statusStr := c.Query("status")
+	if statusStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "status query parameter is required"})
+		return
+	}
+
+	status := models.Status(statusStr)
+	payments, err := h.Service.GetPaymentsByStatus(context.Background(), status)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, payments)
 }

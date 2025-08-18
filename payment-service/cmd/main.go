@@ -16,16 +16,18 @@ import (
 func main() {
 	r := gin.Default()
 
-	// DSN aus ENV (DATABASE_URL) oder Fallback
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		// Beispiel-Fallback; passe Werte an deine Umgebung an
 		dsn = "host=postgres user=paymentuser password=paymentpass dbname=paymentdb port=5432 sslmode=disable TimeZone=UTC"
 	}
 
 	db, err := gorm.Open(gormpostgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("DB connection failed:", err)
+	}
+
+	if err := db.AutoMigrate(&postgres.PaymentEntity{}); err != nil {
+		log.Fatal("DB migration failed:", err)
 	}
 
 	repo := postgres.NewPaymentRepository(db)
@@ -35,6 +37,9 @@ func main() {
 	r.GET("/payments", handler.GetAllPayments)
 	r.GET("/payments/:id", handler.GetPayment)
 	r.POST("/payments", handler.CreatePayment)
+	r.PUT("/payments/:id/status", handler.UpdatePaymentStatus)
+	r.DELETE("/payments/:id", handler.DeletePayment)
+	r.GET("/payments/search", handler.GetPaymentsByStatus)
 
 	port := os.Getenv("PORT")
 	if port == "" {
