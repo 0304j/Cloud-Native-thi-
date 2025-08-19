@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"payment-service/internal/domain/models"
 	"payment-service/internal/ports"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -19,24 +18,16 @@ func NewService(r ports.PaymentRepository) *PaymentService {
 }
 
 func (s *PaymentService) CreatePayment(ctx context.Context, p models.Payment) (*models.Payment, error) {
-	if p.Amount <= 0 {
-		return nil, fmt.Errorf("amount must be positive")
-	}
-	if p.ID == uuid.Nil {
-		p.ID = uuid.New()
-	}
-	p.Status = models.StatusPending
-
-	now := time.Now()
-	if p.CreatedAt.IsZero() {
-		p.CreatedAt = now
-	}
-	p.UpdatedAt = now
-
-	if err := s.repo.Save(ctx, &p); err != nil {
+	payment, err := models.NewPayment(p.OrderID, p.UserID, p.Provider,
+		p.Amount, p.Currency)
+	if err != nil {
 		return nil, err
 	}
-	return &p, nil
+
+	if err := s.repo.Save(ctx, payment); err != nil {
+		return nil, err
+	}
+	return payment, nil
 }
 
 func (s *PaymentService) GetPayment(ctx context.Context, id uuid.UUID) (*models.Payment, error) {
