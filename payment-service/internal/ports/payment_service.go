@@ -14,4 +14,5 @@ type PaymentService interface {
 	UpdatePaymentStatus(ctx context.Context, id uuid.UUID, status models.Status) (*models.Payment, error)
 	DeletePayment(ctx context.Context, id uuid.UUID) error
 	GetPaymentsByStatus(ctx context.Context, status models.Status) ([]models.Payment, error)
+	ProcessOrderPayment(ctx context.Context, orderEvent models.OrderCreatedEvent) (*models.Payment, error)
 }

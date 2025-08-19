@@ -3,18 +3,24 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"payment-service/internal/domain/models"
 	"payment-service/internal/ports"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type PaymentService struct {
-	repo ports.PaymentRepository
+	repo           ports.PaymentRepository
+	eventPublisher ports.EventPublisher
 }
 
-func NewService(r ports.PaymentRepository) *PaymentService {
-	return &PaymentService{repo: r}
+func NewService(r ports.PaymentRepository, ep ports.EventPublisher) *PaymentService {
+	return &PaymentService{
+		repo:           r,
+		eventPublisher: ep,
+	}
 }
 
 func (s *PaymentService) CreatePayment(ctx context.Context, p models.Payment) (*models.Payment, error) {
@@ -69,4 +75,55 @@ func (s *PaymentService) DeletePayment(ctx context.Context, id uuid.UUID) error 
 
 func (s *PaymentService) GetPaymentsByStatus(ctx context.Context, status models.Status) ([]models.Payment, error) {
 	return s.repo.FindByStatus(ctx, status)
+}
+
+func (s *PaymentService) ProcessOrderPayment(ctx context.Context, orderEvent models.OrderCreatedEvent) (*models.Payment, error) {
+	log.Printf("Processing payment for order %s, amount: %.2f %s", orderEvent.OrderID,
+		orderEvent.TotalAmount, orderEvent.Currency)
+
+	orderID, err := uuid.Parse(orderEvent.OrderID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid order ID: %w", err)
+	}
+
+	userID, err := uuid.Parse(orderEvent.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	payment := models.Payment{
+		OrderID:  orderID,
+		UserID:   userID,
+		Provider: orderEvent.PaymentProvider,
+		Amount:   orderEvent.TotalAmount,
+		Currency: orderEvent.Currency,
+	}
+
+	createdPayment, err := s.CreatePayment(ctx, payment)
+	if err != nil {
+		failedEvent := &models.PaymentFailedEvent{
+			OrderID:   orderEvent.OrderID,
+			Reason:    err.Error(),
+			Amount:    orderEvent.TotalAmount,
+			Currency:  orderEvent.Currency,
+			Timestamp: time.Now(),
+		}
+		s.eventPublisher.PublishPaymentFailed(ctx, failedEvent)
+		return nil, err
+	}
+
+	//TODO Simulate payment processing
+	successEvent := &models.PaymentSucceededEvent{
+		OrderID:   orderEvent.OrderID,
+		PaymentID: createdPayment.ID.String(),
+		Amount:    createdPayment.Amount,
+		Currency:  createdPayment.Currency,
+		Timestamp: time.Now(),
+	}
+
+	if err := s.eventPublisher.PublishPaymentSucceeded(ctx, successEvent); err != nil {
+		log.Printf("Failed to publish payment succeeded event: %v", err)
+	}
+
+	return createdPayment, nil
 }
