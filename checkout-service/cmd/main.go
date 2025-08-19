@@ -2,26 +2,37 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/segmentio/kafka-go"
+	"checkout-service/internal/adapters/kafka"
+	"checkout-service/internal/service"
 )
 
 func main() {
-	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"kafka:9092"},
-		Topic:   "checkout",
-		GroupID: "checkout-group",
-	})
+	log.Println("Starting Checkout Service with hexagonal architecture")
 
-	fmt.Println("🟢 Checkout Service hört auf Kafka Topic: 'checkout'")
+	publisher := kafka.NewEventPublisher()
+	consumer := kafka.NewCheckoutConsumer()
 
-	for {
-		m, err := r.ReadMessage(context.Background())
-		if err != nil {
-			log.Fatal("❌ Kafka Fehler:", err)
+	orderService := service.NewOrderService(publisher)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err := consumer.StartConsuming(ctx, orderService); err != nil {
+			log.Fatal("Consumer failed:", err)
 		}
-		fmt.Printf("📦 Empfangenes Produkt: %s\n", string(m.Value))
-	}
+	}()
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down Checkout Service")
+	cancel()
 }
