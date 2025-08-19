@@ -6,14 +6,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"shopping-service/internal/adapters/http"
 	"shopping-service/internal/adapters/http/middleware"
 	"shopping-service/internal/adapters/kafka"
 	mongoadapter "shopping-service/internal/adapters/mongo"
 	"shopping-service/internal/service"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -40,6 +41,26 @@ func main() {
 
 	// 🌐 HTTP starten
 	r := gin.Default()
+
+	// CORS Middleware hinzufügen
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
+		c.Header("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
+
+	// CORS Preflight Handler für alle Routen
+	r.OPTIONS("/*path", func(c *gin.Context) {
+		c.Status(204)
+	})
 
 	// Kafka Producer initialisieren
 	kafkaProducer := kafka.NewKafkaProducer("kafka:9092", "checkout")

@@ -2,11 +2,12 @@ package mongo
 
 import (
 	"context"
+	"shopping-service/internal/domain"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"shopping-service/internal/domain"
-	"time"
 )
 
 type CartRepo struct{ coll *mongo.Collection }
@@ -50,6 +51,48 @@ func (r *CartRepo) ClearCart(userID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_, err := r.coll.DeleteOne(ctx, bson.M{"user_id": userID})
+	return err
+}
+
+func (r *CartRepo) UpdateItem(userID, productID string, qty int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"user_id":          userID,
+		"items.product_id": productID,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"items.$.qty": qty,
+		},
+	}
+
+	result, err := r.coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		// Item nicht gefunden, füge es hinzu
+		return r.AddItem(userID, productID, qty)
+	}
+
+	return nil
+}
+
+func (r *CartRepo) RemoveItem(userID, productID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"user_id": userID}
+	update := bson.M{
+		"$pull": bson.M{
+			"items": bson.M{"product_id": productID},
+		},
+	}
+
+	_, err := r.coll.UpdateOne(ctx, filter, update)
 	return err
 }
 

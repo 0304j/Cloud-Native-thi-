@@ -6,6 +6,7 @@ import (
 	"auth-service/internal/service"
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -37,6 +38,23 @@ func main() {
 	authService := service.NewAuthService(repo, jwtSecret, jwtExpiry)
 
 	router := gin.Default()
+
+	// CORS Middleware für alle Requests
+	router.Use(gin.HandlerFunc(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
+		c.Header("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == "OPTIONS" {
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}))
+
 	handler := httpAdapter.NewAuthHandler(authService)
 
 	router.POST("/register", handler.Register)

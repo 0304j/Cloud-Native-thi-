@@ -46,6 +46,17 @@ services:
     depends_on:
       - kafka
 
+  nginx-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "3000:80"
+    depends_on:
+      - auth-service
+      - shopping-service
+      - checkout-service
+
   auth-service:
     build: ./auth-service
     ports:
