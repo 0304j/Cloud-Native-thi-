@@ -102,6 +102,7 @@ func (s *PaymentService) ProcessOrderPayment(ctx context.Context, orderEvent mod
 	createdPayment, err := s.CreatePayment(ctx, payment)
 	if err != nil {
 		failedEvent := &models.PaymentFailedEvent{
+			EventType: "payment_failed",
 			OrderID:   orderEvent.OrderID,
 			Reason:    err.Error(),
 			Amount:    orderEvent.TotalAmount,
@@ -112,12 +113,49 @@ func (s *PaymentService) ProcessOrderPayment(ctx context.Context, orderEvent mod
 		return nil, err
 	}
 
-	//TODO Simulate payment processing
+	// Simulate payment processing (in real world, this would call external payment provider)
+
+	// Different delays by provider
+	var processingTime time.Duration
+	switch createdPayment.Provider {
+	case "stripe":
+		processingTime = 2 * time.Second
+	case "paypal":
+		processingTime = 4 * time.Second
+	case "visa":
+		processingTime = 3 * time.Second
+	default:
+		processingTime = 3 * time.Second
+	}
+
+	log.Printf("Processing payment with %s provider, will take %v...", createdPayment.Provider, processingTime)
+	time.Sleep(processingTime)
+	log.Printf("Payment processing delay completed for %s", createdPayment.Provider)
+
+	// Update payment status to success
+	updatedPayment, err := s.UpdatePaymentStatus(ctx, createdPayment.ID, models.StatusSuccess)
+	if err != nil {
+		log.Printf("Failed to update payment status to success: %v", err)
+		// Still publish failed event
+		failedEvent := &models.PaymentFailedEvent{
+			EventType: "payment_failed",
+			OrderID:   orderEvent.OrderID,
+			Reason:    fmt.Sprintf("failed to update payment status: %v", err),
+			Amount:    orderEvent.TotalAmount,
+			Currency:  orderEvent.Currency,
+			Timestamp: time.Now(),
+		}
+		s.eventPublisher.PublishPaymentFailed(ctx, failedEvent)
+		return createdPayment, err
+	}
+
+	// Publish payment succeeded event
 	successEvent := &models.PaymentSucceededEvent{
+		EventType: "payment_succeeded",
 		OrderID:   orderEvent.OrderID,
-		PaymentID: createdPayment.ID.String(),
-		Amount:    createdPayment.Amount,
-		Currency:  createdPayment.Currency,
+		PaymentID: updatedPayment.ID.String(),
+		Amount:    updatedPayment.Amount,
+		Currency:  updatedPayment.Currency,
 		Timestamp: time.Now(),
 	}
 
@@ -125,5 +163,6 @@ func (s *PaymentService) ProcessOrderPayment(ctx context.Context, orderEvent mod
 		log.Printf("Failed to publish payment succeeded event: %v", err)
 	}
 
-	return createdPayment, nil
+	log.Printf("Payment %s successfully processed and marked as success", updatedPayment.ID.String())
+	return updatedPayment, nil
 }

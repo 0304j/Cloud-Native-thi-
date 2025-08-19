@@ -24,6 +24,11 @@ services:
       POSTGRES_DB: paymentdb
       POSTGRES_USER: paymentuser
       POSTGRES_PASSWORD: paymentpass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paymentuser -d paymentdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
@@ -44,12 +49,27 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
+  kafka-setup:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    command: >
+      bash -c "
+        echo 'Waiting for Kafka to be ready...'
+        sleep 10
+        kafka-topics --bootstrap-server kafka:9092 --create --topic checkout --partitions 3 --replication-factor 1 --if-not-exists
+        kafka-topics --bootstrap-server kafka:9092 --create --topic order-events --partitions 3 --replication-factor 1 --if-not-exists  
+        kafka-topics --bootstrap-server kafka:9092 --create --topic payment-events --partitions 3 --replication-factor 1 --if-not-exists
+        echo 'Topics created successfully!'
+      "
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     ports:
       - "8090:8080"
     depends_on:
       - kafka
+      - kafka-setup
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -73,7 +93,10 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
       DATABASE_URL: postgres://paymentuser:paymentpass@postgres:5432/paymentdb?sslmode=disable
       DB_HOST: postgres

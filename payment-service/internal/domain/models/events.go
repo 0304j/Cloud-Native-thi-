@@ -13,6 +13,7 @@ type OrderCreatedEvent struct {
 }
 
 type PaymentSucceededEvent struct {
+	EventType string    `json:"event_type"`
 	OrderID   string    `json:"order_id"`
 	PaymentID string    `json:"payment_id"`
 	Amount    float64   `json:"amount"`
@@ -21,6 +22,7 @@ type PaymentSucceededEvent struct {
 }
 
 type PaymentFailedEvent struct {
+	EventType string    `json:"event_type"`
 	OrderID   string    `json:"order_id"`
 	Reason    string    `json:"reason"`
 	Amount    float64   `json:"amount"`

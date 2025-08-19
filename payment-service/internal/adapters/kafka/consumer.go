@@ -46,8 +46,6 @@ func (c *OrderEventConsumer) StartConsuming(ctx context.Context, paymentService 
 				continue
 			}
 
-			log.Printf("Processing payment for order %s", orderEvent.OrderID)
-
 			payment, err := paymentService.ProcessOrderPayment(ctx, orderEvent)
 			if err != nil {
 				log.Printf("Failed to process payment for order %s: %v", orderEvent.OrderID, err)
