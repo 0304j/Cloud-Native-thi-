@@ -39,21 +39,24 @@ func main() {
 
 	router := gin.Default()
 
-	// CORS Middleware für alle Requests
-	router.Use(gin.HandlerFunc(func(c *gin.Context) {
+	// Einfaches CORS Middleware
+	router.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
-		c.Header("Access-Control-Allow-Credentials", "true")
-
+		
 		if c.Request.Method == "OPTIONS" {
-			c.JSON(http.StatusOK, gin.H{"status": "ok"})
-			c.Abort()
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-
+		
 		c.Next()
-	}))
+	})
+
+	// Health Check
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+	})
 
 	handler := httpAdapter.NewAuthHandler(authService)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"shopping-service/internal/adapters/http"
@@ -21,8 +22,13 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 🔗 MongoDB Verbindung
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://shopuser:shoppass@mongo:27017/shopping"))
+	// 🔗 MongoDB Verbindung aus Environment Variable
+	mongoURI := "mongodb://shopuser:shoppass@mongo:27017/shopping" // Default
+	if envURI := os.Getenv("MONGO_URI"); envURI != "" {
+		mongoURI = envURI
+	}
+	
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatal("MongoDB Verbindung fehlgeschlagen:", err)
 	}
@@ -73,6 +79,12 @@ func main() {
 		cartSvc := service.NewCartService(cartRepo)
 		http.NewCartHandler(userGroup, cartSvc, kafkaProducer)
 	}
+	
+	// Health Check Endpoint
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "healthy", "service": "shopping-service"})
+	})
+	
 	fmt.Println("🟢 Shopping Service läuft auf http://localhost:8080")
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
