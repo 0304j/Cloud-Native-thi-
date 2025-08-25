@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 )
@@ -61,4 +62,30 @@ func (m *MongoRepository) FindAll() ([]domain.Product, error) {
 
 	log.Printf("✅ %d Produkte gefunden", len(products))
 	return products, nil
+}
+
+func (m *MongoRepository) FindByID(id string) (*domain.Product, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Convert string ID to MongoDB ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.Printf("❌ Invalid ObjectID format: %s", id)
+		return nil, err
+	}
+
+	var product domain.Product
+	err = m.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&product)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Printf("❌ Product with ID %s not found", id)
+			return nil, err
+		}
+		log.Printf("❌ Error finding product by ID %s: %v", id, err)
+		return nil, err
+	}
+
+	log.Printf("✅ Product found: %s - %.2f", product.Name, product.Price)
+	return &product, nil
 }

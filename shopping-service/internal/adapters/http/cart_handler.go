@@ -18,11 +18,12 @@ type AddToCartReq struct {
 
 type CartHandler struct {
 	cartSvc       *service.CartService
+	productSvc    *service.ProductService
 	kafkaProducer *kafka.KafkaProducer
 }
 
-func NewCartHandler(rg *gin.RouterGroup, cs *service.CartService, kp *kafka.KafkaProducer) {
-	h := &CartHandler{cartSvc: cs, kafkaProducer: kp}
+func NewCartHandler(rg *gin.RouterGroup, cs *service.CartService, ps *service.ProductService, kp *kafka.KafkaProducer) {
+	h := &CartHandler{cartSvc: cs, productSvc: ps, kafkaProducer: kp}
 	rg.POST("/cart", h.AddToCart)
 	rg.GET("/cart", h.GetCart)
 	rg.PUT("/cart", h.UpdateCartItem)                // Update quantity
@@ -92,15 +93,25 @@ func (h *CartHandler) Checkout(c *gin.Context) {
 
 	for _, item := range cart.Items {
 		productIds = append(productIds, item.ProductID)
-		// Placeholder-Preis - in echter Anwendung würde man Produktpreise aus DB holen
-		itemPrice := 10.0 * float64(item.Qty) // 10€ pro Produkt als Beispiel
+		
+		// Echten Produktpreis aus DB holen
+		product, err := h.productSvc.GetProductByID(item.ProductID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("failed to get product %s: %v", item.ProductID, err),
+			})
+			return
+		}
+		
+		itemPrice := product.Price * float64(item.Qty)
 		amount += itemPrice
 
 		orderItems = append(orderItems, map[string]interface{}{
-			"product_id":  item.ProductID,
-			"quantity":    item.Qty,
-			"unit_price":  10.0,
-			"total_price": itemPrice,
+			"product_id":   item.ProductID,
+			"product_name": product.Name,
+			"quantity":     item.Qty,
+			"unit_price":   product.Price,
+			"total_price":  itemPrice,
 		})
 	}
 

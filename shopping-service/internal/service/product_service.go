@@ -30,3 +30,7 @@ func (s *ProductService) GetAllProducts() ([]domain.Product, error) {
 	}
 	return products, nil
 }
+
+func (s *ProductService) GetProductByID(id string) (*domain.Product, error) {
+	return s.repo.FindByID(id)
+}

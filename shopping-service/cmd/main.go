@@ -77,7 +77,7 @@ func main() {
 	{
 		cartRepo := mongoadapter.NewCartRepo(db)
 		cartSvc := service.NewCartService(cartRepo)
-		http.NewCartHandler(userGroup, cartSvc, kafkaProducer)
+		http.NewCartHandler(userGroup, cartSvc, productService, kafkaProducer)
 	}
 	
 	// Health Check Endpoint
