@@ -10,28 +10,12 @@ services:
        MONGO_INITDB_DATABASE: shopping
        MONGO_INITDB_ROOT_USERNAME: root
        MONGO_INITDB_ROOT_PASSWORD: rootpass
+     command: ["--auth"]
      healthcheck:
        test: ["CMD","mongosh", "--eval", "db.adminCommand('ping')"]
        interval: 10s
        timeout: 5s
        retries: 5
-
-  postgres:
-    image: postgres:17
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d
-    environment:
-      POSTGRES_DB: paymentdb
-      POSTGRES_USER: paymentuser
-      POSTGRES_PASSWORD: paymentpass
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U paymentuser -d paymentdb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
@@ -52,47 +36,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
-  kafka-setup:
-    image: confluentinc/cp-kafka:7.3.0
-    depends_on:
-      - kafka
-    command: >
-      bash -c "
-        echo 'Waiting for Kafka to be ready...'
-        sleep 10
-        kafka-topics --bootstrap-server kafka:9092 --create --topic checkout --partitions 3 --replication-factor 1 --if-not-exists
-        kafka-topics --bootstrap-server kafka:9092 --create --topic order-events --partitions 3 --replication-factor 1 --if-not-exists  
-        kafka-topics --bootstrap-server kafka:9092 --create --topic payment-events --partitions 3 --replication-factor 1 --if-not-exists
-        echo 'Topics created successfully!'
-      "
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8090:8080"
-    depends_on:
-      - kafka
-      - kafka-setup
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-
-  payment-service:
-    build: ./payment-service
-    ports:
-      - "8083:8083"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-    environment:
-      DATABASE_URL: postgres://paymentuser:paymentpass@postgres:5432/paymentdb?sslmode=disable
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: paymentdb
-      DB_USER: paymentuser
-      DB_PASSWORD: paymentpass
   auth-service:
     build: ./auth-service
     ports:
@@ -101,7 +44,7 @@ services:
       mongo:
         condition: service_healthy
     environment:
-      MONGO_URI: mongodb://authuser:authpass@mongo:27017/auth_db?authSource=auth_db
+      MONGO_URI: mongodb://root:rootpass@mongo:27017/auth_db?authSource=admin
       MONGO_DB: auth_db
       MONGO_COLLECTION: users
       JWT_SECRET: supergeheimespasswort
@@ -123,8 +66,8 @@ services:
       kafka:
         condition: service_started
     environment:
+      MONGO_URI: mongodb://root:rootpass@mongo:27017/shopping?authSource=admin
       JWT_SECRET: supergeheimespasswort
-      MONGO_URI: mongodb://shopuser:shoppass@mongo:27017/shopping?authSource=shopping
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 10s
@@ -151,7 +94,5 @@ services:
       checkout-service:
         condition: service_started
 
-
 volumes:
   mongo_data:
-  postgres_data:

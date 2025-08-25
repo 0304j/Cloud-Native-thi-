@@ -1,18 +1,198 @@
-cat > .gitignore <<'EOF'
-# Go
-bin/
-*.exe
-*.log
-*.tmp
+# ===========================================
+# Go Dependencies & Build Files
+# ===========================================
 
-# Editor
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Built service binaries
+auth-service/auth-service
+shopping-service/shopping-service
+checkout-service/checkout-service
+
+# Go mod cache (diese Datei wird automatisch generiert)
+# go.sum sollte normalerweise committed werden, aber falls gewünscht:
+# go.sum
+
+# ===========================================
+# IDE & Editor Files
+# ===========================================
+
+# Visual Studio Code
 .vscode/
-.idea/
-.DS_Store
+*.code-workspace
 
 # Bruno is a local tool for API Testing
 .bruno/
 
+# IntelliJ/GoLand
+.idea/
+*.iml
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ===========================================
+# Operating System Files
+# ===========================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Windows
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ===========================================
+# Docker & Container Files
+# ===========================================
+
+# Docker Compose overrides
+docker-compose.override.yml
+docker-compose.prod.yml
+docker-compose.dev.yml
+
+# Container logs
+*.log
+docker/*.log
+
+# ===========================================
+# Database & Storage Files
+# ===========================================
+
+# MongoDB data directories
+data/
+mongo-data/
+mongodb-data/
+
+# Kafka & Zookeeper data
+kafka-logs/
+kafka-data/
+zookeeper-data/
+zookeeper-logs/
+
+# ===========================================
+# Configuration & Secrets
+# ===========================================
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+
+# Configuration files mit sensiblen Daten
+config.local.toml
+config.production.toml
+config.dev.toml
+secrets.yaml
+secrets.yml
+
+# ===========================================
+# Build & Temporary Files
+# ===========================================
+
+# Build directories
+build/
+dist/
+target/
+bin/
+
 # Docker build temp
+# Temporary files
 tmp/
-EOF
+temp/
+*.tmp
+*.temp
+
+# Coverage reports
+coverage.txt
+coverage.html
+coverage.out
+
+# Vendor directory (falls Go modules nicht verwendet werden)
+vendor/
+
+# ===========================================
+# Node.js (für Proxy Server, falls vorhanden)
+# ===========================================
+
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# ===========================================
+# Frontend Assets (falls vorhanden)
+# ===========================================
+
+# Compiled assets
+public/dist/
+static/dist/
+
+# Cache
+.cache/
+.parcel-cache/
+
+# ===========================================
+# Development Tools
+# ===========================================
+
+# Air (Go live reload tool)
+.air.toml
+
+# Delve debugger
+debug
+
+# Profiling files
+*.prof
+*.pprof
+
+# ===========================================
+# Backup Files
+# ===========================================
+
+*.bak
+*.backup
+*.old

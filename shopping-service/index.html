@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Service - Produkte & Warenkorb</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.8rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .cart-badge {
+            position: relative;
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cart-badge:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .cart-count {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:not(.active) {
+            color: #666;
+        }
+
+        .tab:not(.active):hover {
+            background: #f8f9fa;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        /* Products Section */
+        .product-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .product-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .product-id {
+            font-size: 0.8rem;
+            color: #666;
+            background: #f8f9fa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 5px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .quantity-control input {
+            width: 60px;
+            text-align: center;
+        }
+
+        /* Cart Section */
+        .cart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .cart-item-id {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .cart-item-qty {
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .cart-total {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .cart-total h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+        }
+
+        .checkout-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 1rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .admin-only {
+            border: 2px dashed #667eea;
+            background: #f8f9ff;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>🛒 Shopping Service</h1>
+                <span style="color: #666;">Cloud-Native E-Commerce</span>
+            </div>
+            <div class="user-info">
+                <div class="user-badge" id="user-badge">Laden...</div>
+                <div class="cart-badge" onclick="showTab('cart')">
+                    🛒 Warenkorb
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+                <button onclick="logout()" class="btn btn-secondary">Abmelden</button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('products')">📦 Produkte</div>
+            <div class="tab" onclick="showTab('create')" id="admin-tab" style="display: none;">➕ Produkt erstellen</div>
+            <div class="tab" onclick="showTab('cart')">🛒 Warenkorb</div>
+        </div>
+
+        <div id="message"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Lade Daten...</p>
+        </div>
+
+        <!-- Products List -->
+        <div class="content-section active" id="products-section">
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Create Product (Admin Only) -->
+        <div class="content-section" id="create-section">
+            <div class="product-form admin-only">
+                <h2 style="margin-bottom: 1.5rem; color: #667eea;">🏷️ Neues Produkt erstellen</h2>
+                <form onsubmit="createProduct(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="product-name">Produktname:</label>
+                            <input type="text" id="product-name" required 
+                                   placeholder="z.B. iPhone 15 Pro">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-price">Preis (€):</label>
+                            <input type="number" id="product-price" required 
+                                   min="0" step="0.01" placeholder="99.99">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Produkt erstellen</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Shopping Cart -->
+        <div class="content-section" id="cart-section">
+            <div class="cart-container">
+                <h2 style="margin-bottom: 1.5rem; color: #667eea;">🛒 Dein Warenkorb</h2>
+                <div id="cart-items">
+                    <!-- Cart items will be loaded here -->
+                </div>
+                <div id="cart-total" class="cart-total" style="display: none;">
+                    <h3>📦 Artikel: <span id="total-items">0</span></h3>
+                    <h3 style="color: #28a745; font-size: 1.5rem; margin: 1rem 0;">💰 Gesamt: <span id="total-amount">0.00</span>€</h3>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button onclick="clearCart()" class="btn btn-secondary" style="flex: 1;">
+                            🗑️ Warenkorb leeren
+                        </button>
+                        <button onclick="checkout()" class="btn checkout-btn" style="flex: 2;">
+                            💳 Jetzt bezahlen
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; font-size: 0.9rem; color: #666;">
+                        🔒 Sichere Bezahlung • 📦 Kostenloser Versand • ⚡ Sofort-Checkout
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const SHOPPING_API_BASE = '/api/shopping';
+        const AUTH_API_BASE = '/api/auth';
+        
+        // State
+        let currentUser = null;
+        let authToken = null;
+        let products = [];
+        let cart = { items: [] };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Get auth info from URL params or localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('token');
+            const userFromUrl = urlParams.get('user');
+
+            if (tokenFromUrl && userFromUrl) {
+                authToken = decodeURIComponent(tokenFromUrl);
+                currentUser = JSON.parse(decodeURIComponent(userFromUrl));
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            } else {
+                authToken = localStorage.getItem('authToken');
+                const userStr = localStorage.getItem('currentUser');
+                if (userStr) {
+                    currentUser = JSON.parse(userStr);
+                }
+            }
+
+            if (!authToken || !currentUser) {
+                showMessage('❌ Nicht angemeldet! Weiterleitung zum Auth Service...', 'error');
+                setTimeout(() => {
+                    window.location.href = '../auth-service/index.html';
+                }, 2000);
+                return;
+            }
+
+            updateUserInterface();
+            loadProducts();
+            loadCart();
+        }
+
+        function updateUserInterface() {
+            const userBadge = document.getElementById('user-badge');
+            userBadge.textContent = `${currentUser.role === 'admin' ? '👑' : '👤'} ${currentUser.email}`;
+            
+            // Show admin tab if user is admin
+            if (currentUser.role === 'admin') {
+                document.getElementById('admin-tab').style.display = 'block';
+            }
+            
+            // Debug: Log auth info
+            console.log('✅ User logged in:', currentUser);
+            console.log('✅ Auth token:', authToken ? 'Present' : 'Missing');
+        }
+
+        function showTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(tabName + '-section').classList.add('active');
+
+            clearMessage();
+
+            // Load data when switching tabs
+            if (tabName === 'products') {
+                loadProducts();
+            } else if (tabName === 'cart') {
+                loadCart();
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function clearMessage() {
+            document.getElementById('message').innerHTML = '';
+        }
+
+        async function loadProducts() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/products`);
+                
+                if (response.ok) {
+                    products = await response.json();
+                    displayProducts();
+                } else {
+                    showMessage('❌ Fehler beim Laden der Produkte', 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Verbindungsfehler: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayProducts() {
+            const grid = document.getElementById('products-grid');
+            
+            if (!products || products.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🏪 Noch keine Produkte verfügbar</h3>
+                        <p>Komm später wieder oder erstelle als Admin neue Produkte!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-header">
+                        <div>
+                            <div class="product-title">${product.name}</div>
+                            <div class="product-id">ID: ${product.id}</div>
+                        </div>
+                        <div class="product-price">${product.price.toFixed(2)}€</div>
+                    </div>
+                    <div class="quantity-control">
+                        <label>Anzahl:</label>
+                        <input type="number" id="qty-${product.id}" value="1" min="1" max="10">
+                        <button onclick="addToCart('${product.id}')" class="btn btn-success">
+                            ➕ In Warenkorb
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function createProduct(event) {
+            event.preventDefault();
+            
+            if (currentUser.role !== 'admin') {
+                showMessage('❌ Nur Administratoren können Produkte erstellen!', 'error');
+                return;
+            }
+
+            const name = document.getElementById('product-name').value;
+            const price = parseFloat(document.getElementById('product-price').value);
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, price })
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Produkt erfolgreich erstellt!', 'success');
+                    document.getElementById('product-name').value = '';
+                    document.getElementById('product-price').value = '';
+                    loadProducts();
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Fehler beim Erstellen: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Verbindungsfehler: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function addToCart(productId) {
+            const qtyInput = document.getElementById(`qty-${productId}`);
+            const qty = parseInt(qtyInput.value) || 1;
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/cart`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        qty: qty
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const product = products.find(p => p.id === productId);
+                    const productName = product ? product.name : 'Produkt';
+                    
+                    showMessage(`✅ ${qty}x ${productName} zum Warenkorb hinzugefügt!`, 'success');
+                    qtyInput.value = '1';
+                    
+                    // Warenkorb neu laden und sofort aktualisieren
+                    await loadCart();
+                    updateCartCount();
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Fehler: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Verbindungsfehler: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function removeFromCart(productId) {
+            console.log('🗑️ Removing from cart:', productId);
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/cart/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                console.log('📡 Delete response status:', response.status);
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Delete success:', result);
+                    
+                    const product = products.find(p => p.id === productId);
+                    const productName = product ? product.name : 'Produkt';
+                    showMessage(`✅ ${productName} aus Warenkorb entfernt!`, 'success');
+                    
+                    // Warenkorb neu laden
+                    await loadCart();
+                    updateCartCount();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Delete error response:', errorText);
+                    
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        showMessage(`❌ Fehler beim Entfernen: ${errorJson.error}`, 'error');
+                    } catch (e) {
+                        showMessage(`❌ Fehler beim Entfernen: ${errorText}`, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Delete network error:', error);
+                showMessage(`❌ Verbindungsfehler: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function updateQuantity(productId, newQty) {
+            console.log('📝 Updating quantity:', productId, 'to', newQty);
+            
+            if (newQty <= 0) {
+                removeFromCart(productId);
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/cart`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        qty: newQty
+                    })
+                });
+
+                console.log('📡 Update response status:', response.status);
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Update success:', result);
+                    
+                    const product = products.find(p => p.id === productId);
+                    const productName = product ? product.name : 'Produkt';
+                    showMessage(`✅ ${productName} Menge auf ${newQty} aktualisiert!`, 'success');
+                    
+                    // Warenkorb neu laden
+                    await loadCart();
+                    updateCartCount();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Update error response:', errorText);
+                    
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        showMessage(`❌ Fehler beim Aktualisieren: ${errorJson.error}`, 'error');
+                    } catch (e) {
+                        showMessage(`❌ Fehler beim Aktualisieren: ${errorText}`, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Update network error:', error);
+                showMessage(`❌ Verbindungsfehler: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadCart() {
+            showLoading(true);
+            console.log('🛒 Loading cart...');
+            console.log('🔑 Using token:', authToken ? 'Present' : 'Missing');
+            
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/cart`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                console.log('📡 Cart response status:', response.status);
+                
+                if (response.ok) {
+                    cart = await response.json();
+                    console.log('✅ Cart loaded:', cart);
+                    console.log('📊 Cart structure - Items:', cart.Items);
+                    console.log('📊 Cart structure - items:', cart.items);
+                    console.log('📊 Cart items count:', cart.Items ? cart.Items.length : 0);
+                    displayCart();
+                    updateCartCount();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Cart error:', errorText);
+                    showMessage('❌ Fehler beim Laden des Warenkorbs: ' + errorText, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Cart fetch error:', error);
+                showMessage(`❌ Verbindungsfehler: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+
+            console.log('🎯 displayCart called with cart:', cart);
+            console.log('🎯 cart.Items:', cart.Items);
+            console.log('🎯 cart.items:', cart.items);
+
+            if (!cart.Items || cart.Items.length === 0) {
+                cartItems.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🛒 Dein Warenkorb ist leer</h3>
+                        <p>Füge Produkte hinzu, um loszulegen!</p>
+                        <button onclick="showTab('products')" class="btn" style="margin-top: 1rem;">
+                            📦 Zu den Produkten
+                        </button>
+                    </div>
+                `;
+                cartTotal.style.display = 'none';
+                return;
+            }
+
+            cartItems.innerHTML = cart.Items.map(item => {
+                // Finde das entsprechende Produkt in der Produktliste
+                const product = products.find(p => p.id === item.ProductID);
+                const productName = product ? product.name : 'Unbekanntes Produkt';
+                const productPrice = product ? product.price : 10.0; // Fallback-Preis
+                const itemTotal = productPrice * item.Qty;
+                
+                return `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${productName}</div>
+                            <div class="cart-item-id">ID: ${item.ProductID}</div>
+                            <div class="cart-item-price">${productPrice.toFixed(2)}€ × ${item.Qty} = ${itemTotal.toFixed(2)}€</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="cart-item-qty">
+                                <span class="quantity-badge">${item.Qty}</span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="updateQuantity('${item.ProductID}', ${item.Qty - 1})" 
+                                        class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                        ${item.Qty <= 1 ? 'disabled' : ''}>
+                                    ➖
+                                </button>
+                                <button onclick="updateQuantity('${item.ProductID}', ${item.Qty + 1})" 
+                                        class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    ➕
+                                </button>
+                                <button onclick="removeFromCart('${item.ProductID}')" 
+                                        class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Berechne Gesamtsumme
+            const totalAmount = cart.Items.reduce((sum, item) => {
+                const product = products.find(p => p.id === item.ProductID);
+                const price = product ? product.price : 10.0;
+                return sum + (price * item.Qty);
+            }, 0);
+
+            document.getElementById('total-items').textContent = cart.Items.reduce((sum, item) => sum + item.Qty, 0);
+            document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
+            cartTotal.style.display = 'block';
+        }
+
+        function updateCartCount() {
+            const count = cart.Items ? cart.Items.reduce((sum, item) => sum + item.Qty, 0) : 0;
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        async function checkout() {
+            if (!cart.Items || cart.Items.length === 0) {
+                showMessage('❌ Warenkorb ist leer!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/checkout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const itemsCount = result.items_count || cart.items.length;
+                    const totalAmount = result.total_amount || 0;
+                    
+                    showMessage(`🎉 Zahlung erfolgreich! 
+                        <br>📦 ${itemsCount} Artikel für ${totalAmount.toFixed(2)}€
+                        <br>🏪 Bestellung wird verarbeitet...
+                        <br>📋 Bestellnummer: ${result.order_id}`, 'success');
+                    
+                    // Clear cart
+                    cart = { items: [] };
+                    displayCart();
+                    updateCartCount();
+                    
+                    // Log order details for debugging
+                    console.log('Bestellung erstellt:', result);
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Zahlung fehlgeschlagen: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Verbindungsfehler: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function clearCart() {
+            if (!cart.items || cart.items.length === 0) {
+                showMessage('❌ Warenkorb ist bereits leer!', 'error');
+                return;
+            }
+
+            if (!confirm('🗑️ Möchtest du wirklich alle Artikel aus dem Warenkorb entfernen?')) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                // Alle Items einzeln löschen
+                for (const item of cart.items) {
+                    await fetch(`${SHOPPING_API_BASE}/cart/${item.product_id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                }
+
+                showMessage('✅ Warenkorb wurde geleert!', 'success');
+                
+                // Cart leeren und UI aktualisieren
+                cart = { items: [] };
+                displayCart();
+                updateCartCount();
+            } catch (error) {
+                showMessage(`❌ Fehler beim Leeren: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            window.location.href = '../auth-service/index.html';
+        }
+
+        // Test connection on page load
+        window.addEventListener('load', async function() {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch(`${SHOPPING_API_BASE}/products`);
+                console.log('✅ Shopping Service erreichbar');
+            } catch (error) {
+                console.warn('⚠️ Shopping Service nicht erreichbar:', error.message);
+                showMessage('⚠️ Shopping Service möglicherweise offline. Stelle sicher, dass der Service läuft.', 'warning');
+            }
+        });
+
+        // Auto-refresh cart count every 30 seconds
+        setInterval(() => {
+            if (authToken && currentUser) {
+                updateCartCount();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
