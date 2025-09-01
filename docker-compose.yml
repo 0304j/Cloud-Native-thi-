@@ -63,6 +63,10 @@ services:
         kafka-topics --bootstrap-server kafka:9092 --create --topic checkout --partitions 3 --replication-factor 1 --if-not-exists
         kafka-topics --bootstrap-server kafka:9092 --create --topic order-events --partitions 3 --replication-factor 1 --if-not-exists  
         kafka-topics --bootstrap-server kafka:9092 --create --topic payment-events --partitions 3 --replication-factor 1 --if-not-exists
+        kafka-topics --bootstrap-server kafka:9092 --create --topic order-confirmed --partitions 3 --replication-factor 1 --if-not-exists
+        kafka-topics --bootstrap-server kafka:9092 --create --topic order-cancelled --partitions 3 --replication-factor 1 --if-not-exists
+        kafka-topics --bootstrap-server kafka:9092 --create --topic order-status-changed --partitions 3 --replication-factor 1 --if-not-exists
+        kafka-topics --bootstrap-server kafka:9092 --create --topic kitchen-notifications --partitions 3 --replication-factor 1 --if-not-exists
         echo 'Topics created successfully!'
       "
 
@@ -137,6 +141,25 @@ services:
       kafka:
         condition: service_started
 
+  kitchen-service:
+    build: ./kitchen-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      MONGO_URI: mongodb://kitchenuser:kitchenpass@mongo:27017/kitchen_db?authSource=kitchen_db
+      KAFKA_BROKER: kafka:9092
+      PORT: 8084
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   nginx-proxy:
     build:
       context: .
@@ -150,6 +173,8 @@ services:
         condition: service_healthy
       checkout-service:
         condition: service_started
+      kitchen-service:
+        condition: service_healthy
 
 
 volumes:
