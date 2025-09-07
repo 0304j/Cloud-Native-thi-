@@ -8,8 +8,8 @@ type OrderCreatedEvent struct {
 	TotalAmount     float64   `json:"total_amount"`
 	Currency        string    `json:"currency"`
 	PaymentProvider string    `json:"payment_provider"`
-	Items           []string  `json:"items"`
 	CreatedAt       time.Time `json:"created_at"`
+	// Items field removed - Payment Service doesn't need item details
 }
 
 type PaymentSucceededEvent struct {

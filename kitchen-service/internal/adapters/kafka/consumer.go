@@ -99,12 +99,35 @@ func (h *ConsumerGroupHandler) processMessage(message *sarama.ConsumerMessage) e
 	ctx := context.Background()
 
 	switch message.Topic {
-	case "order-confirmed":
-		return h.handleOrderConfirmed(ctx, message.Value)
-	case "order-cancelled":
-		return h.handleOrderCancelled(ctx, message.Value)
+	case "kitchen-events":
+		return h.handleKitchenEvent(ctx, message.Value)
 	default:
 		log.Printf("Unknown topic: %s", message.Topic)
+		return nil
+	}
+}
+
+func (h *ConsumerGroupHandler) handleKitchenEvent(ctx context.Context, data []byte) error {
+	// Parse event to determine type
+	var baseEvent struct {
+		EventType string `json:"event_type"`
+	}
+	if err := json.Unmarshal(data, &baseEvent); err != nil {
+		log.Printf("Failed to parse event type: %v", err)
+		return err
+	}
+
+	// Only handle order confirmations - ignore our own status events!
+	switch baseEvent.EventType {
+	case "order_confirmed":
+		return h.handleOrderConfirmed(ctx, data)
+	case "order_received_in_kitchen", "order_preparation_started", "order_ready", 
+		 "order_picked_up_by_driver", "order_cancelled_in_kitchen", "kitchen_notification":
+		// Ignore our own status events to prevent infinite loop
+		log.Printf("Ignoring own event type: %s", baseEvent.EventType)
+		return nil
+	default:
+		log.Printf("Unknown kitchen event type: %s", baseEvent.EventType)
 		return nil
 	}
 }
@@ -115,9 +138,15 @@ func (h *ConsumerGroupHandler) handleOrderConfirmed(ctx context.Context, data []
 		return fmt.Errorf("failed to unmarshal order event: %w", err)
 	}
 
+	// Use user_id as customer_id if customer_id is not set
+	customerID := orderEvent.CustomerID
+	if customerID == "" {
+		customerID = orderEvent.UserID
+	}
+
 	kitchenOrder := &models.KitchenOrder{
 		OrderID:       orderEvent.OrderID,
-		CustomerID:    orderEvent.CustomerID,
+		CustomerID:    customerID,
 		Items:         orderEvent.Items,
 		Status:        models.StatusReceived,
 		EstimatedTime: calculateEstimatedTime(orderEvent.Items),

@@ -16,15 +16,24 @@ func main() {
 
 	publisher := kafka.NewEventPublisher()
 	consumer := kafka.NewCheckoutConsumer()
-
+	
 	orderService := service.NewOrderService(publisher)
+	paymentConsumer := kafka.NewPaymentEventConsumer(orderService)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Start checkout consumer
 	go func() {
 		if err := consumer.StartConsuming(ctx, orderService); err != nil {
-			log.Fatal("Consumer failed:", err)
+			log.Fatal("Checkout consumer failed:", err)
+		}
+	}()
+
+	// Start payment event consumer
+	go func() {
+		if err := paymentConsumer.StartConsuming(ctx, publisher); err != nil {
+			log.Fatal("Payment event consumer failed:", err)
 		}
 	}()
 

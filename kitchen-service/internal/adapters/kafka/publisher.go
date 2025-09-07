@@ -37,7 +37,7 @@ func (kp *KafkaPublisher) PublishOrderStatusChanged(ctx context.Context, event *
 	}
 
 	message := &sarama.ProducerMessage{
-		Topic: "order-status-changed",
+		Topic: "kitchen-events",
 		Key:   sarama.StringEncoder(event.OrderID),
 		Value: sarama.ByteEncoder(data),
 	}
@@ -58,7 +58,7 @@ func (kp *KafkaPublisher) PublishKitchenNotification(ctx context.Context, event 
 	}
 
 	message := &sarama.ProducerMessage{
-		Topic: "kitchen-notifications",
+		Topic: "kitchen-events",
 		Key:   sarama.StringEncoder(event.OrderID),
 		Value: sarama.ByteEncoder(data),
 	}

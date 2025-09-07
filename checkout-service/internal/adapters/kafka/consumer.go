@@ -17,7 +17,7 @@ func NewCheckoutConsumer() *CheckoutConsumer {
 	return &CheckoutConsumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers: []string{"kafka:9092"},
-			Topic:   "checkout",
+			Topic:   "shopping-events",
 			GroupID: "checkout-group",
 		}),
 	}

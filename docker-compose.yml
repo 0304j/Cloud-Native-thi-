@@ -60,13 +60,10 @@ services:
       bash -c "
         echo 'Waiting for Kafka to be ready...'
         sleep 10
-        kafka-topics --bootstrap-server kafka:9092 --create --topic checkout --partitions 3 --replication-factor 1 --if-not-exists
-        kafka-topics --bootstrap-server kafka:9092 --create --topic order-events --partitions 3 --replication-factor 1 --if-not-exists  
+        kafka-topics --bootstrap-server kafka:9092 --create --topic shopping-events --partitions 3 --replication-factor 1 --if-not-exists
+        kafka-topics --bootstrap-server kafka:9092 --create --topic checkout-events --partitions 3 --replication-factor 1 --if-not-exists  
         kafka-topics --bootstrap-server kafka:9092 --create --topic payment-events --partitions 3 --replication-factor 1 --if-not-exists
-        kafka-topics --bootstrap-server kafka:9092 --create --topic order-confirmed --partitions 3 --replication-factor 1 --if-not-exists
-        kafka-topics --bootstrap-server kafka:9092 --create --topic order-cancelled --partitions 3 --replication-factor 1 --if-not-exists
-        kafka-topics --bootstrap-server kafka:9092 --create --topic order-status-changed --partitions 3 --replication-factor 1 --if-not-exists
-        kafka-topics --bootstrap-server kafka:9092 --create --topic kitchen-notifications --partitions 3 --replication-factor 1 --if-not-exists
+        kafka-topics --bootstrap-server kafka:9092 --create --topic kitchen-events --partitions 3 --replication-factor 1 --if-not-exists
         echo 'Topics created successfully!'
       "
 

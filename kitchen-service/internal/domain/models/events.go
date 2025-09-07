@@ -6,6 +6,7 @@ type OrderReceivedEvent struct {
 	EventType  string       `json:"event_type"`
 	OrderID    string       `json:"order_id"`
 	CustomerID string       `json:"customer_id"`
+	UserID     string       `json:"user_id"`     // Support user_id from checkout service
 	Items      []OrderItem  `json:"items"`
 	Timestamp  time.Time    `json:"timestamp"`
 }
