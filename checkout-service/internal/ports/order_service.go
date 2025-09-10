@@ -7,5 +7,6 @@ import (
 
 type OrderService interface {
 	ProcessCheckout(ctx context.Context, checkoutData []byte) error
+	ProcessOrder(ctx context.Context, order *models.Order) error
 	GetOrderData(orderID string) *models.Order
 }

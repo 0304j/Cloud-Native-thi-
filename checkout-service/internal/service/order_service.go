@@ -57,6 +57,26 @@ func (s *OrderService) ProcessCheckout(ctx context.Context, checkoutData []byte)
 	return nil
 }
 
+func (s *OrderService) ProcessOrder(ctx context.Context, order *models.Order) error {
+	log.Printf("Processing order %s with type: %s", order.ID.String(), order.OrderType)
+
+	// Store order data
+	s.mutex.Lock()
+	s.orderStore[order.ID.String()] = order
+	s.mutex.Unlock()
+
+	// Create and publish event
+	event := order.ToEvent()
+	if err := s.eventPublisher.PublishOrderCreated(ctx, event); err != nil {
+		log.Printf("Failed to publish order created event: %v", err)
+		return err
+	}
+
+	log.Printf("Successfully processed order %s with type: %s, total: %.2f",
+		order.ID.String(), order.OrderType, order.TotalAmount)
+	return nil
+}
+
 func (s *OrderService) GetOrderData(orderID string) *models.Order {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()

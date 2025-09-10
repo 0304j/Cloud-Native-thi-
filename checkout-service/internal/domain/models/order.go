@@ -16,6 +16,10 @@ type Order struct {
 	ItemDetails     []KitchenOrderItem `json:"item_details"` // Store detailed item information
 	Status          string    `json:"status"`
 	CreatedAt       time.Time `json:"created_at"`
+	
+	// Restaurant delivery info
+	OrderType       string        `json:"order_type"`              // "delivery" | "pickup"
+	DeliveryInfo    *DeliveryInfo `json:"delivery_info,omitempty"` // only for delivery orders
 }
 
 type OrderCreatedEvent struct {
@@ -26,6 +30,10 @@ type OrderCreatedEvent struct {
 	PaymentProvider string             `json:"payment_provider"`
 	Items           []KitchenOrderItem `json:"items"`
 	CreatedAt       time.Time          `json:"created_at"`
+	
+	// Restaurant delivery info
+	OrderType       string             `json:"order_type"`              // "delivery" | "pickup"
+	DeliveryInfo    *DeliveryInfo      `json:"delivery_info,omitempty"` // only for delivery orders
 }
 
 type OrderConfirmedEvent struct {
@@ -87,5 +95,7 @@ func (o *Order) ToEvent() *OrderCreatedEvent {
 		PaymentProvider: o.PaymentProvider,
 		Items:           o.ItemDetails,
 		CreatedAt:       o.CreatedAt,
+		OrderType:       o.OrderType,
+		DeliveryInfo:    o.DeliveryInfo,
 	}
 }
