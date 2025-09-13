@@ -55,7 +55,7 @@ func main() {
 	consumer, err := kafka.NewKafkaConsumer(
 		kafkaBrokers,
 		"kitchen-service-group",
-		[]string{"kitchen-events"},
+		[]string{"checkout-events", "kitchen-events"},
 		kitchenService,
 	)
 	if err != nil {

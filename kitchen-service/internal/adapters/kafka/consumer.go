@@ -99,12 +99,64 @@ func (h *ConsumerGroupHandler) processMessage(message *sarama.ConsumerMessage) e
 	ctx := context.Background()
 
 	switch message.Topic {
+	case "checkout-events":
+		return h.handleCheckoutEvent(ctx, message.Value)
 	case "kitchen-events":
 		return h.handleKitchenEvent(ctx, message.Value)
 	default:
 		log.Printf("Unknown topic: %s", message.Topic)
 		return nil
 	}
+}
+
+func (h *ConsumerGroupHandler) handleCheckoutEvent(ctx context.Context, data []byte) error {
+	var checkoutEvent models.OrderReceivedEvent
+	if err := json.Unmarshal(data, &checkoutEvent); err != nil {
+		log.Printf("Failed to parse checkout event: %v", err)
+		return err
+	}
+
+	log.Printf("Processing checkout event for order %s", checkoutEvent.OrderID)
+	
+	// Convert checkout event to kitchen order
+	kitchenOrder := &models.KitchenOrder{
+		OrderID:        checkoutEvent.OrderID,
+		CustomerID:     checkoutEvent.UserID,
+		Items:          checkoutEvent.Items,
+		Status:         models.StatusReceived,
+		EstimatedTime:  calculateEstimatedTime(checkoutEvent.Items),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+	
+	// Handle the order received from checkout
+	if err := h.kitchenService.ReceiveOrder(ctx, kitchenOrder); err != nil {
+		log.Printf("Failed to handle order received: %v", err)
+		return err
+	}
+
+	log.Printf("Order %s successfully added to kitchen queue", checkoutEvent.OrderID)
+	return nil
+}
+
+func calculateEstimatedTime(items []models.OrderItem) int {
+	totalTime := 0
+	for _, item := range items {
+		if item.PrepTime > 0 {
+			totalTime += item.PrepTime * item.Quantity
+		} else {
+			totalTime += 30 * item.Quantity // default 30 seconds per item
+		}
+	}
+	
+	if totalTime < 10 {
+		totalTime = 10 // minimum 10 seconds
+	}
+	if totalTime > 300 {
+		totalTime = 300 // maximum 5 minutes
+	}
+	
+	return totalTime
 }
 
 func (h *ConsumerGroupHandler) handleKitchenEvent(ctx context.Context, data []byte) error {
@@ -179,22 +231,3 @@ func (h *ConsumerGroupHandler) handleOrderCancelled(ctx context.Context, data []
 	return nil
 }
 
-func calculateEstimatedTime(items []models.OrderItem) int {
-	totalTime := 0
-	for _, item := range items {
-		if item.PrepTime > 0 {
-			totalTime += item.PrepTime * item.Quantity
-		} else {
-			totalTime += 30 * item.Quantity // default 30 seconds per item
-		}
-	}
-	
-	if totalTime < 10 {
-		totalTime = 10 // minimum 10 seconds
-	}
-	if totalTime > 300 {
-		totalTime = 300 // maximum 5 minutes
-	}
-	
-	return totalTime
-}

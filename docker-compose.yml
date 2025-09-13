@@ -180,6 +180,16 @@ services:
       timeout: 5s
       retries: 3
 
+  delivery-service:
+    build: ./delivery-service
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      REDIS_ADDR: redis:6379
+
   nginx-proxy:
     build:
       context: .
