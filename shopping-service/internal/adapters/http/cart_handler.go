@@ -89,11 +89,8 @@ func (h *CartHandler) Checkout(c *gin.Context) {
 	// Berechne Gesamtsumme und sammle Produktdetails
 	var amount float64
 	orderItems := []map[string]interface{}{}
-	productIds := []string{}
 
 	for _, item := range cart.Items {
-		productIds = append(productIds, item.ProductID)
-		
 		// Echten Produktpreis aus DB holen
 		product, err := h.productSvc.GetProductByID(item.ProductID)
 		if err != nil {
@@ -102,7 +99,7 @@ func (h *CartHandler) Checkout(c *gin.Context) {
 			})
 			return
 		}
-		
+
 		itemPrice := product.Price * float64(item.Qty)
 		amount += itemPrice
 
@@ -116,12 +113,11 @@ func (h *CartHandler) Checkout(c *gin.Context) {
 	}
 
 	// Erstelle umfassende Bestellnachricht
-	order := map[string]interface{}{
+	order := map[string]any{
 		"event_type":   "order_created",
 		"order_id":     fmt.Sprintf("ord-%d", time.Now().UnixNano()),
 		"user_id":      uid,
 		"items":        orderItems,
-		"product_ids":  productIds,
 		"total_amount": amount,
 		"currency":     "EUR",
 		"status":       "pending",

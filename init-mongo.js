@@ -21,8 +21,19 @@ db.createUser({
 
 console.log("Created authuser for auth_db database");
 
+// Switch to kitchen_db database and create kitchenuser  
+db = db.getSiblingDB('kitchen_db');
+db.createUser({
+  user: 'kitchenuser',
+  pwd: 'kitchenpass',
+  roles: [{ role: 'readWrite', db: 'kitchen_db' }]
+});
+
+console.log("Created kitchenuser for kitchen_db database");
+
 // Create a test collection to ensure databases exist
 db.getSiblingDB('shopping').createCollection('products');
 db.getSiblingDB('auth_db').createCollection('users');
+db.getSiblingDB('kitchen_db').createCollection('kitchen_orders');
 
 console.log("MongoDB initialization completed");

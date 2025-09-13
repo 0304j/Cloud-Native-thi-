@@ -354,9 +354,14 @@
                     <h3>💳 Checkout Service</h3>
                     <p>Kafka Consumer</p>
                 </div>
+                <div class="arrow">→</div>
+                <div class="service-node">
+                    <h3>🍳 Kitchen Service</h3>
+                    <p>Port 8084</p>
+                </div>
             </div>
             <div style="text-align: center; color: #666; margin-top: 1rem;">
-                <p><strong>Datenfluss:</strong> Benutzer meldet sich an → Durchsucht Produkte → Fügt zum Warenkorb hinzu → Bestellt → Bestellung wird verarbeitet</p>
+                <p><strong>Datenfluss:</strong> Benutzer meldet sich an → Durchsucht Produkte → Fügt zum Warenkorb hinzu → Bestellt → Bestellung wird verarbeitet → Küche bereitet Essen zu</p>
             </div>
         </div>
 
@@ -435,6 +440,28 @@
             </div>
         </div>
 
+        <!-- Kitchen Service -->
+        <div class="service-card">
+            <div class="service-content">
+                <h2 class="service-title">Kitchen Service</h2>
+                <p class="service-description">
+                    🍳 <strong>Küchenmanagement-System</strong> - Empfängt Bestellungen automatisch über Kafka und simuliert 
+                    realistische Kochvorgänge. Mit Live-Dashboard zur Überwachung der Zubereitung und automatischer 
+                    Statusaktualisierung für nachgelagerte Services wie Delivery.
+                </p>
+                <ul class="service-features">
+                    <li><span class="feature-icon">✓</span> Automatische Order-Verarbeitung</li>
+                    <li><span class="feature-icon">✓</span> Realistische Koch-Simulation</li>
+                    <li><span class="feature-icon">✓</span> Live Status Updates</li>
+                    <li><span class="feature-icon">✓</span> Driver Pickup Management</li>
+                    <li><span class="feature-icon">✓</span> Kitchen Statistics Dashboard</li>
+                </ul>
+                <a href="kitchen-service/index.html" class="btn" target="_blank">
+                    🍳 Kitchen Dashboard öffnen
+                </a>
+            </div>
+        </div>
+
         <!-- Technology Stack -->
         <div class="tech-stack">
             <h2 class="tech-title">🛠️ Verwendete Technologien</h2>
@@ -486,6 +513,7 @@ docker-compose up -d
 # Services sind verfügbar unter:
 # Auth Service: http://localhost:8081
 # Shopping Service: http://localhost:8080
+# Kitchen Service: http://localhost:8084
 # MongoDB: localhost:27017
 # Kafka: localhost:9092</code></pre>
 
@@ -496,6 +524,8 @@ docker-compose up -d
                     <li><strong>Shopping Service öffnen</strong> und neue Produkte erstellen</li>
                     <li><strong>Als normaler Benutzer</strong> Produkte zum Warenkorb hinzufügen</li>
                     <li><strong>Bestellung aufgeben</strong> und im Checkout Service verfolgen</li>
+                    <li><strong>Kitchen Service öffnen</strong> und die automatische Zubereitung beobachten</li>
+                    <li><strong>Driver Pickup</strong> simulieren wenn das Essen fertig ist</li>
                 </ol>
             </div>
         </div>

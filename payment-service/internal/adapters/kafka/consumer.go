@@ -19,7 +19,7 @@ func NewOrderEventConsumer() *OrderEventConsumer {
 	return &OrderEventConsumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers: []string{"kafka:9092"},
-			Topic:   "order-events",
+			Topic:   "checkout-events",
 			GroupID: "payment-service-group",
 		}),
 	}

@@ -69,7 +69,7 @@ func main() {
 	})
 
 	// Kafka Producer initialisieren
-	kafkaProducer := kafka.NewKafkaProducer("kafka:9092", "checkout")
+	kafkaProducer := kafka.NewKafkaProducer("kafka:9092", "shopping-events")
 
 	http.NewProductHandler(r, productService, kafkaProducer)
 	userGroup := r.Group("/")

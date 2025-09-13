@@ -1,0 +1,18 @@
+[server]
+port = "8084"
+
+[database]
+mongo_uri = "mongodb://mongo:27017"
+database_name = "kitchen_db"
+
+[kafka]
+brokers = ["kafka:9092"]
+consumer_group = "kitchen-service-group"
+topics = ["order-confirmed", "order-cancelled"]
+publish_topics = ["order-status-changed", "kitchen-notifications"]
+
+[kitchen]
+auto_process_queue = true
+queue_process_interval = "30s"
+max_concurrent_orders = 10
+default_prep_time = 15  # minutes

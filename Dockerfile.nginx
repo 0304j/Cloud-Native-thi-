@@ -5,6 +5,7 @@ COPY index.html /usr/share/nginx/html/
 COPY auth-service/ /usr/share/nginx/html/auth-service/
 COPY shopping-service/ /usr/share/nginx/html/shopping-service/
 COPY checkout-service/ /usr/share/nginx/html/checkout-service/
+COPY kitchen-service/ /usr/share/nginx/html/kitchen-service/
 
 # Nginx-Konfiguration kopieren
 COPY nginx.conf /etc/nginx/conf.d/default.conf
