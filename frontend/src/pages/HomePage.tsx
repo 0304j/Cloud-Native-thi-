@@ -10,12 +10,11 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 lg:py-40">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
-              Analytica
-              <span className="block text-primary">Restaurant</span>
+              Analytica Restaurant
             </h1>
             <p className="mt-6 text-lg leading-8 text-muted-foreground">
-              Datengetriebene Küche trifft auf authentischen Geschmack.
-              Frische Zutaten, optimierte Rezepte - direkt zu dir nach Hause geliefert.
+              Datengetriebene Küche trifft auf authentischen Geschmack. Frische
+              Zutaten, optimierte Rezepte - direkt zu dir nach Hause geliefert.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button asChild size="lg">
@@ -53,7 +52,8 @@ export default function HomePage() {
               Frische Zutaten
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Täglich frische, regionale Zutaten für optimalen Geschmack und Qualität.
+              Täglich frische, regionale Zutaten für optimalen Geschmack und
+              Qualität.
             </p>
           </div>
 
@@ -66,7 +66,8 @@ export default function HomePage() {
               Schnelle Lieferung
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Durchschnittlich 30 Minuten - heiß und frisch direkt vor deine Haustür.
+              Durchschnittlich 30 Minuten - heiß und frisch direkt vor deine
+              Haustür.
             </p>
           </div>
 
@@ -79,7 +80,8 @@ export default function HomePage() {
               Live-Tracking
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Verfolge deine Bestellung in Echtzeit - von der Küche bis vor deine Tür.
+              Verfolge deine Bestellung in Echtzeit - von der Küche bis vor
+              deine Tür.
             </p>
           </div>
         </div>

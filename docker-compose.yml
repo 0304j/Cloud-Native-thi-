@@ -146,6 +146,18 @@ services:
       timeout: 5s
       retries: 3
 
+  # Seed dummy products for development
+  shopping-seed:
+    build:
+      context: ./shopping-service
+      dockerfile: Dockerfile.seed
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://shopuser:shoppass@mongo:27017/shopping?authSource=shopping
+    profiles: ["dev"]
+
   checkout-service:
     build: ./checkout-service
     ports:
