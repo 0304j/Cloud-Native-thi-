@@ -39,17 +39,18 @@ func main() {
 
 	router := gin.Default()
 
-	// Einfaches CORS Middleware
+	// CORS Middleware with cookie support
 	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Origin", "http://localhost:5173") // Specific origin for credentials
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
-		
+		c.Header("Access-Control-Allow-Credentials", "true") // Allow cookies
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-		
+
 		c.Next()
 	})
 
@@ -62,6 +63,7 @@ func main() {
 
 	router.POST("/register", handler.Register)
 	router.POST("/login", handler.Login)
+	router.POST("/logout", handler.Logout)
 
 	log.Println("Auth Service läuft auf Port 8081...")
 	router.Run(":8081")

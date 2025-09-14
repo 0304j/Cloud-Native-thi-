@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,30 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/api/cart', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      // User not authenticated, that's fine
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +56,7 @@ export default function AuthPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important: include cookies
         body: JSON.stringify(body),
       });
 
@@ -43,8 +67,7 @@ export default function AuthPage() {
       }
 
       if (isLogin) {
-        // Login successful - store token and redirect
-        localStorage.setItem('jwt_token', data.token);
+        // Login successful - cookie is set by server, just redirect
         localStorage.setItem('user_email', email);
         setSuccess('Login successful! Redirecting...');
 
@@ -64,9 +87,28 @@ export default function AuthPage() {
     }
   };
 
-  const isLoggedIn = localStorage.getItem('jwt_token');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      localStorage.removeItem('user_email');
+      setIsAuthenticated(false);
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
 
-  if (isLoggedIn) {
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <p>Checking authentication...</p>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
     const userEmail = localStorage.getItem('user_email');
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -85,11 +127,7 @@ export default function AuthPage() {
               Go to Menu
             </Button>
             <Button
-              onClick={() => {
-                localStorage.removeItem('jwt_token');
-                localStorage.removeItem('user_email');
-                window.location.reload();
-              }}
+              onClick={handleLogout}
               variant="outline"
               className="w-full"
             >

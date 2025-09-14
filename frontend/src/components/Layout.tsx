@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,11 +23,38 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+interface Cart {
+  UserID: string;
+  Items: Array<{
+    ProductID: string;
+    Qty: number;
+  }>;
+}
+
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const [cartCount, setCartCount] = useState(0);
 
-  const cartCount = 3;
+  useEffect(() => {
+    fetchCartCount();
+  }, []);
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await fetch('/api/cart', {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const cartData: Cart = await response.json();
+        const totalItems = cartData.Items.reduce((sum, item) => sum + item.Qty, 0);
+        setCartCount(totalItems);
+      }
+    } catch (err) {
+      console.error('Failed to fetch cart count:', err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">

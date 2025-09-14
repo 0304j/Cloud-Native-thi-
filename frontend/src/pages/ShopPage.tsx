@@ -46,20 +46,12 @@ export default function ShopPage() {
 
   const handleAddToCart = async (product: Product) => {
     try {
-      // TODO: Get JWT token from auth context
-      const token = localStorage.getItem('jwt_token');
-
-      if (!token) {
-        alert('Please login first to add items to cart');
-        return;
-      }
-
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify({
           product_id: product.id,
           qty: 1

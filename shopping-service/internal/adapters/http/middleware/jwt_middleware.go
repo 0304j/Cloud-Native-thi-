@@ -16,17 +16,23 @@ import (
 const ContextUserIDKey = "user_id"
 const ContextUserRoleKey = "user_role"
 
-// Extract token from Authorization header: "Bearer <token>"
-func extractTokenFromHeader(c *gin.Context) (string, bool) {
+// Extract token from Authorization header or cookie
+func extractToken(c *gin.Context) (string, bool) {
+	// Try Authorization header first (Bearer token)
 	auth := c.GetHeader("Authorization")
-	if auth == "" {
-		return "", false
+	if auth != "" {
+		parts := strings.SplitN(auth, " ", 2)
+		if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+			return parts[1], true
+		}
 	}
-	parts := strings.SplitN(auth, " ", 2)
-	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-		return "", false
+
+	// Try httpOnly cookie as fallback
+	if cookie, err := c.Cookie("jwt_token"); err == nil && cookie != "" {
+		return cookie, true
 	}
-	return parts[1], true
+
+	return "", false
 }
 
 // JWTMiddleware returns a Gin middleware that validates JWT and sets user_id and user_role in context
@@ -37,9 +43,9 @@ func JWTMiddleware() gin.HandlerFunc {
 	}
 	log.Printf("DEBUG: JWT_SECRET = '%s'", secret)
 	return func(c *gin.Context) {
-		tokenStr, ok := extractTokenFromHeader(c)
+		tokenStr, ok := extractToken(c)
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid authorization header"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid authorization token"})
 			return
 		}
 		log.Printf("DEBUG: Received token = '%s'", tokenStr[:50]+"...")

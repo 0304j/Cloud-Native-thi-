@@ -74,5 +74,31 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": signedToken})
+	// Set httpOnly cookie instead of returning token in response
+	c.SetCookie(
+		"jwt_token",     // cookie name
+		signedToken,     // cookie value
+		3600,           // max age (1 hour, same as token expiration)
+		"/",            // path
+		"",             // domain (empty means current domain)
+		false,          // secure (set to true in production with HTTPS)
+		true,           // httpOnly
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "login successful"})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	// Clear the httpOnly cookie
+	c.SetCookie(
+		"jwt_token",     // cookie name
+		"",             // empty value
+		-1,             // negative max age to delete cookie
+		"/",            // path
+		"",             // domain
+		false,          // secure
+		true,           // httpOnly
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
