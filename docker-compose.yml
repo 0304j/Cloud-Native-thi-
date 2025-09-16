@@ -203,9 +203,7 @@ services:
       REDIS_ADDR: redis:6379
 
   nginx-proxy:
-    build:
-      context: .
-      dockerfile: Dockerfile.nginx
+    build: ./frontend
     ports:
       - "3001:80"
     depends_on:

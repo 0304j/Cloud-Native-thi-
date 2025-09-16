@@ -4,7 +4,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, AlertCircle, Check, Loader2 } from "lucide-react";
-import { Product, AddToCartRequest } from "@/types/domain";
+import type { Product, AddToCartRequest } from "@/types/domain";
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
