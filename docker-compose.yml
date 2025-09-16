@@ -5,7 +5,7 @@ services:
        - "27017:27017"
      volumes:
        - mongo_data:/data/db
-       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+       - ./db/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
      environment:
        MONGO_INITDB_DATABASE: shopping
        MONGO_INITDB_ROOT_USERNAME: root

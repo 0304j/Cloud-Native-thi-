@@ -53,9 +53,7 @@ func (s *Server) setupRoutes() {
 	// API routes - direct routes for consistency with other services
 	s.router.POST("/checkout", checkoutHandler.CreateOrder)
 
-	// Serve static files (for the admin dashboard)
-	s.router.Static("/static", "./static")
-	s.router.StaticFile("/", "./index.html")
+	// API endpoints only - frontend is served by nginx-proxy
 }
 
 func (s *Server) Start(port int) error {
