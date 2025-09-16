@@ -100,6 +100,47 @@ export interface OrderResponse {
   created_at: string;
 }
 
+// Payment Service Domain
+export interface PaymentRequest {
+  order_id: string;
+  user_id: string;
+  provider: 'stripe' | 'paypal' | 'bank_transfer';
+  amount: number;
+  currency: string;
+  payment_details: StripePaymentDetails | PayPalPaymentDetails | BankTransferDetails;
+}
+
+export interface StripePaymentDetails {
+  card_number: string;
+  expiry_month: string;
+  expiry_year: string;
+  cvv: string;
+  cardholder_name: string;
+}
+
+export interface PayPalPaymentDetails {
+  email: string;
+  password: string;
+}
+
+export interface BankTransferDetails {
+  iban: string;
+  account_holder: string;
+  bank_name?: string;
+}
+
+export interface PaymentResponse {
+  id: string;
+  order_id: string;
+  user_id: string;
+  provider: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'success' | 'failed';
+  created_at: string;
+  updated_at: string;
+}
+
 // Kitchen Service Domain (for future TrackingPage)
 export interface KitchenOrder {
   id: string;

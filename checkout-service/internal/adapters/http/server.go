@@ -50,11 +50,8 @@ func (s *Server) setupRoutes() {
 	// Health check
 	s.router.GET("/health", checkoutHandler.HealthCheck)
 	
-	// API routes
-	v1 := s.router.Group("/api/v1")
-	{
-		v1.POST("/checkout", checkoutHandler.CreateOrder)
-	}
+	// API routes - direct routes for consistency with other services
+	s.router.POST("/checkout", checkoutHandler.CreateOrder)
 
 	// Serve static files (for the admin dashboard)
 	s.router.Static("/static", "./static")

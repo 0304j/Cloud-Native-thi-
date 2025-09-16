@@ -96,7 +96,7 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/checkout" className={navigationMenuTriggerStyle()}>
+                  <Link to="/tracking" className={navigationMenuTriggerStyle()}>
                     Bestellung verfolgen
                   </Link>
                 </NavigationMenuItem>
@@ -151,7 +151,7 @@ export default function Layout({ children }: LayoutProps) {
                     <span>Menü</span>
                   </Link>
                   <Link
-                    to="/checkout"
+                    to="/tracking"
                     className="flex items-center space-x-2 text-lg font-medium"
                   >
                     <Clock className="h-5 w-5" />

@@ -242,15 +242,35 @@ export default function CheckoutPage() {
         body: JSON.stringify(checkoutRequest),
       });
 
+      // Debug: Log response details
+      console.log("Checkout response status:", response.status);
+      console.log("Checkout response headers:", Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Bestellung fehlgeschlagen");
+        const responseText = await response.text();
+        console.error("Checkout error response:", responseText);
+
+        // Try to parse as JSON, fallback to text
+        let errorMessage = "Bestellung fehlgeschlagen";
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Response is not JSON, use the text directly
+          errorMessage = responseText || errorMessage;
+        }
+
+        throw new Error(errorMessage);
       }
 
-      const result: OrderResponse = await response.json();
+      const responseText = await response.text();
+      console.log("Checkout success response:", responseText);
 
-      // Order successful - redirect to tracking
-      navigate(`/kitchen?order_id=${result.order_id}`);
+      // Parse JSON response
+      const result: OrderResponse = JSON.parse(responseText);
+
+      // Order successful - redirect to payment
+      navigate(`/payment?order_id=${result.order_id}&amount=${getTotalAmount()}&currency=EUR`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bestellung fehlgeschlagen");
     } finally {

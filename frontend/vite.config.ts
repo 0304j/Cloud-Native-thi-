@@ -50,6 +50,12 @@ export default defineConfig(({ command, mode }) => {
         target: env.VITE_CHECKOUT_SERVICE_URL,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      // Payment Service
+      '/api/payments': {
+        target: env.VITE_PAYMENT_SERVICE_URL,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   }
