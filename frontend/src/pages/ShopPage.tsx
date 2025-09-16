@@ -3,21 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, AlertCircle } from "lucide-react";
-
-// Product type based on Go domain model
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  user_id: string;
-}
+import { Plus, AlertCircle, Check, Loader2 } from "lucide-react";
+import { Product, AddToCartRequest } from "@/types/domain";
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [addingToCart, setAddingToCart] = useState<string | null>(null); // Track which product is being added
+  const [cartSuccess, setCartSuccess] = useState<string | null>(null); // Track successful additions
 
   // Fetch products from Shopping Service
   useEffect(() => {
@@ -35,7 +29,7 @@ export default function ShopPage() {
         setError(null);
       } catch (err) {
         console.error('Failed to fetch products:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load products');
+        setError(err instanceof Error ? err.message : 'Produkte konnten nicht geladen werden');
       } finally {
         setLoading(false);
       }
@@ -45,6 +39,8 @@ export default function ShopPage() {
   }, []);
 
   const handleAddToCart = async (product: Product) => {
+    setAddingToCart(product.id);
+
     try {
       const response = await fetch('/api/cart', {
         method: 'POST',
@@ -55,18 +51,30 @@ export default function ShopPage() {
         body: JSON.stringify({
           product_id: product.id,
           qty: 1
-        })
+        } as AddToCartRequest)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add item to cart');
+        throw new Error('Artikel konnte nicht zum Warenkorb hinzugefügt werden');
       }
 
+      // Show success state
+      setAddingToCart(null);
+      setCartSuccess(product.id);
+
+      // Clear success state after animation
+      setTimeout(() => {
+        setCartSuccess(null);
+      }, 1500);
+
       console.log('Added to cart:', product.name);
-      // TODO: Update cart count in header
+
+      // Trigger cart count refresh in header
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
     } catch (err) {
       console.error('Cart error:', err);
-      alert('Failed to add item to cart. Please try again.');
+      setAddingToCart(null);
+      alert('Artikel konnte nicht zum Warenkorb hinzugefügt werden. Bitte versuche es erneut.');
     }
   };
 
@@ -117,10 +125,26 @@ export default function ShopPage() {
           </span>
           <Button
             onClick={() => handleAddToCart(product)}
-            className="gap-2"
+            disabled={addingToCart === product.id || cartSuccess === product.id}
+            className="gap-2 cursor-pointer disabled:cursor-not-allowed"
+            variant={cartSuccess === product.id ? "default" : "default"}
           >
-            <Plus className="h-4 w-4" />
-            Hinzufügen
+            {addingToCart === product.id ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Wird hinzugefügt...
+              </>
+            ) : cartSuccess === product.id ? (
+              <>
+                <Check className="h-4 w-4" />
+                Hinzugefügt!
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                Hinzufügen
+              </>
+            )}
           </Button>
         </div>
       </CardFooter>

@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
+import type { LoginRequest, RegisterRequest } from "@/types/domain";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,8 +32,8 @@ export default function AuthPage() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/cart', {
-        credentials: 'include',
+      const response = await fetch("/api/cart", {
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -34,6 +41,7 @@ export default function AuthPage() {
       }
     } catch (err) {
       // User not authenticated, that's fine
+      console.warn("Not authenticated:", err);
     } finally {
       setCheckingAuth(false);
     }
@@ -46,42 +54,42 @@ export default function AuthPage() {
     setSuccess(null);
 
     try {
-      const endpoint = isLogin ? '/api/login' : '/api/register';
-      const body = isLogin
+      const endpoint = isLogin ? "/api/login" : "/api/register";
+      const body: LoginRequest | RegisterRequest = isLogin
         ? { email, password }
-        : { email, password, role: 'user' };
+        : { email, password, role: "user" };
 
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include', // Important: include cookies
+        credentials: "include", // Important: include cookies
         body: JSON.stringify(body),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed');
+        throw new Error(data.error || "Anmeldung fehlgeschlagen");
       }
 
       if (isLogin) {
         // Login successful - cookie is set by server, just redirect
-        localStorage.setItem('user_email', email);
-        setSuccess('Login successful! Redirecting...');
+        localStorage.setItem("user_email", email);
+        setSuccess("Anmeldung erfolgreich! Weiterleitung...");
 
         setTimeout(() => {
-          navigate('/shop');
+          navigate("/shop");
         }, 1000);
       } else {
         // Registration successful
-        setSuccess('Registration successful! Please login.');
+        setSuccess("Registrierung erfolgreich! Bitte melde dich an.");
         setIsLogin(true);
-        setPassword('');
+        setPassword("");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : "Etwas ist schiefgelaufen");
     } finally {
       setLoading(false);
     }
@@ -89,49 +97,40 @@ export default function AuthPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include',
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
       });
-      localStorage.removeItem('user_email');
+      localStorage.removeItem("user_email");
       setIsAuthenticated(false);
     } catch (err) {
-      console.error('Logout failed:', err);
+      console.error("Logout failed:", err);
     }
   };
 
   if (checkingAuth) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <p>Checking authentication...</p>
+        <p>Überprüfe Anmeldung...</p>
       </div>
     );
   }
 
   if (isAuthenticated) {
-    const userEmail = localStorage.getItem('user_email');
+    const userEmail = localStorage.getItem("user_email");
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Already Logged In</CardTitle>
-            <CardDescription>
-              You are logged in as {userEmail}
-            </CardDescription>
+            <CardTitle>Bereits angemeldet</CardTitle>
+            <CardDescription>Du bist angemeldet als {userEmail}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
-              onClick={() => navigate('/shop')}
-              className="w-full"
-            >
-              Go to Menu
+            <Button onClick={() => navigate("/shop")} className="w-full">
+              Zum Menü
             </Button>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="w-full"
-            >
-              Logout
+            <Button onClick={handleLogout} variant="outline" className="w-full">
+              Abmelden
             </Button>
           </CardContent>
         </Card>
@@ -145,13 +144,12 @@ export default function AuthPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {isLogin ? 'Login to Analytica Restaurant' : 'Create Account'}
+              {isLogin ? "Bei Analytica Restaurant anmelden" : "Konto erstellen"}
             </CardTitle>
             <CardDescription>
               {isLogin
-                ? 'Enter your credentials to access your account'
-                : 'Sign up to start ordering delicious food'
-              }
+                ? "Gib deine Anmeldedaten ein, um auf dein Konto zuzugreifen"
+                : "Registriere dich, um leckeres Essen zu bestellen"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -183,7 +181,7 @@ export default function AuthPage() {
                 </div>
 
                 <div className="grid gap-3">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Passwort</Label>
                   <Input
                     id="password"
                     type="password"
@@ -195,22 +193,28 @@ export default function AuthPage() {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Loading...' : (isLogin ? 'Login' : 'Create Account')}
+                  {loading
+                    ? "Lädt..."
+                    : isLogin
+                      ? "Anmelden"
+                      : "Konto erstellen"}
                 </Button>
 
                 <div className="text-center text-sm">
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  {isLogin
+                    ? "Noch kein Konto? "
+                    : "Bereits ein Konto? "}
                   <button
                     type="button"
                     onClick={() => {
                       setIsLogin(!isLogin);
                       setError(null);
                       setSuccess(null);
-                      setPassword('');
+                      setPassword("");
                     }}
                     className="underline underline-offset-4 hover:text-primary"
                   >
-                    {isLogin ? 'Sign up' : 'Login'}
+                    {isLogin ? "Registrieren" : "Anmelden"}
                   </button>
                 </div>
               </div>
@@ -222,7 +226,9 @@ export default function AuthPage() {
         <div className="mt-4 text-center">
           <p className="text-xs text-muted-foreground mb-2">Demo Accounts:</p>
           <div className="flex gap-2 justify-center">
-            <Badge variant="outline" className="text-xs">user@demo.de / demo123</Badge>
+            <Badge variant="outline" className="text-xs">
+              user@demo.de / demo123
+            </Badge>
           </div>
         </div>
       </div>

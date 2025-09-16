@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import type { Cart } from "@/types/domain";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -23,41 +24,54 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-interface Cart {
-  UserID: string;
-  Items: Array<{
-    ProductID: string;
-    Qty: number;
-  }>;
-}
-
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
   const [cartCount, setCartCount] = useState(0);
+  const [cartAnimating, setCartAnimating] = useState(false);
 
   useEffect(() => {
     fetchCartCount();
+
+    // Listen for cart updates
+    const handleCartUpdate = () => {
+      setCartAnimating(true);
+      fetchCartCount();
+
+      // Clear animation after a short delay
+      setTimeout(() => {
+        setCartAnimating(false);
+      }, 600);
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
   }, []);
 
   const fetchCartCount = async () => {
     try {
-      const response = await fetch('/api/cart', {
-        credentials: 'include'
+      const response = await fetch("/api/cart", {
+        credentials: "include",
       });
 
       if (response.ok) {
         const cartData: Cart = await response.json();
-        const totalItems = cartData.Items.reduce((sum, item) => sum + item.Qty, 0);
+        const totalItems = cartData.Items.reduce(
+          (sum, item) => sum + item.Qty,
+          0
+        );
         setCartCount(totalItems);
       }
     } catch (err) {
-      console.error('Failed to fetch cart count:', err);
+      console.error("Failed to fetch cart count:", err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 flex h-16 items-center relative">
           {/* Logo - Left */}
@@ -98,7 +112,10 @@ export default function Layout({ children }: LayoutProps) {
                 {cartCount > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                    className={cn(
+                      "absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs transition-transform",
+                      cartAnimating && "animate-bounce"
+                    )}
                   >
                     {cartCount}
                   </Badge>
@@ -156,6 +173,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <main
         className={cn(
+          "flex-1", // Takes available space, pushing footer to bottom
           isHomePage
             ? ""
             : "container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12"
@@ -165,7 +183,7 @@ export default function Layout({ children }: LayoutProps) {
       </main>
 
       {!isHomePage && (
-        <footer className="border-t bg-muted/30 mt-16 lg:mt-24">
+        <footer className="border-t bg-muted/30 mt-auto">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
             <div className="text-center">
               <p className="text-sm text-muted-foreground">

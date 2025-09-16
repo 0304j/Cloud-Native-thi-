@@ -17,10 +17,32 @@ func NewCartRepo(db *mongo.Database) *CartRepo { return &CartRepo{coll: db.Colle
 func (r *CartRepo) AddItem(userID, productID string, qty int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	filter := bson.M{"user_id": userID}
-	update := bson.M{"$push": bson.M{"items": bson.M{"product_id": productID, "qty": qty}}}
-	_, err := r.coll.UpdateOne(ctx, filter, update, &options.UpdateOptions{Upsert: ptrBool(true)})
-	return err
+
+	// First, try to increment existing item quantity
+	filter := bson.M{
+		"user_id":          userID,
+		"items.product_id": productID,
+	}
+	update := bson.M{
+		"$inc": bson.M{
+			"items.$.qty": qty,
+		},
+	}
+
+	result, err := r.coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	// If no existing item was found, add new item
+	if result.ModifiedCount == 0 {
+		filter := bson.M{"user_id": userID}
+		update := bson.M{"$push": bson.M{"items": bson.M{"product_id": productID, "qty": qty}}}
+		_, err := r.coll.UpdateOne(ctx, filter, update, &options.UpdateOptions{Upsert: ptrBool(true)})
+		return err
+	}
+
+	return nil
 }
 
 func (r *CartRepo) GetCart(userID string) (domain.Cart, error) {
